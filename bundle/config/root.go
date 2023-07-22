@@ -152,6 +152,9 @@ func (r *Root) MergeEnvironment(env *Environment) error {
 
 	if env.Bundle != nil {
 		err = mergo.MergeWithOverwrite(&r.Bundle, env.Bundle)
+		if env.Bundle.Git.Branch != "" {
+			r.Bundle.Git.Inferred = false
+		}
 		if err != nil {
 			return err
 		}
