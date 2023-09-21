@@ -19,6 +19,15 @@ setup(
     description="my test wheel",
     packages=find_packages(where='./src'),
     package_dir={'': 'src'},
-    entry_points={"entry_points": "main={{.project_name}}.main:main"},
-    install_requires=["setuptools"],
+    entry_points={
+        "packages": [
+            "main={{.project_name}}.main:main"
+        ]
+    },
+    install_requires=[
+        # Dependencies in case the output wheel file is used as a library dependency.
+        # For defining dependencies, when this package is used in Databricks, see:
+        # https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
+        "setuptools"
+    ],
 )

@@ -49,6 +49,9 @@ resources:
             package_name: {{.project_name}}
             entry_point: main
           libraries:
+            # By default we just include the .whl file generated for the {{.project_name}} package.
+            # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
+            # for more information on how to add other libraries.
             - whl: ../dist/*.whl
 
       {{else}}
