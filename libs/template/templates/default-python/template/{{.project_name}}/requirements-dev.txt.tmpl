@@ -1,0 +1,15 @@
+## requirements-dev.txt: development-time dependencies
+##
+## For defining dependencies used by jobs in Databricks Workflows, see:
+## https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
+
+## pytest is the default package used for testing
+pytest
+
+## databricks-connect can be used to run the package locally.
+## See https://docs.databricks.com/dev-tools/databricks-connect.html.
+## To make use of databricks-connect, either use the VS Code extension
+## (https://docs.databricks.com/en/dev-tools/vscode-ext/index.html)
+## or uncomment the line below with the Databricks Runtime version
+## used for your {{.project_name}}:
+# databricks-connect=={{template "latest_lts_db_connect_version"}}
