@@ -27,7 +27,7 @@
             "default": "yes",
             "enum": ["yes", "no"],
             "comment": "If the selected they don't want a notebook we provide an extra hint that the stub Python package can be used to author their DLT pipeline",
-            "description": "Include a stub (sample) Python package in '{{.project_name}}{{path_separator}}src'",
+            "description": "Include a stub (sample) Python package in '{{.project_name}}{{path_separator}}src'{{if and (eq .include_dlt \"yes\") (eq .include_notebook \"no\")}} (which can be used for your Delta Live Tables pipeline){{end}}",
             "order": 4
         }
     },
