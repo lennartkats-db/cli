@@ -106,6 +106,13 @@ func (m *translatePaths) rewritePath(
 }
 
 func translateNotebookPath(literal, localFullPath, localRelPath, remotePath string) (string, error) {
+	// HACK: immediately shortcircuit if in /Workspace, skipping all checks
+	if strings.HasPrefix(localFullPath, "/Workspace") {
+		// HACK: quick and dumb inline repaces
+		localFullPath = strings.Replace(localFullPath, ".ipynb", "", -1)
+		localFullPath = strings.Replace(localFullPath, "/Workspace/", "/", 1)
+		return localFullPath, nil
+	}
 	nb, _, err := notebook.Detect(localFullPath)
 	if os.IsNotExist(err) {
 		return "", fmt.Errorf("notebook %s not found", literal)
@@ -131,6 +138,10 @@ func translateFilePath(literal, localFullPath, localRelPath, remotePath string) 
 	}
 	if nb {
 		return "", ErrIsNotebook{localFullPath}
+	}
+	// HACK
+	if strings.HasPrefix(localFullPath, "/Workspace") {
+		return localFullPath, nil
 	}
 	return remotePath, nil
 }

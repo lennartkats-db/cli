@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/artifacts/whl"
@@ -107,6 +108,11 @@ func (m *basicUpload) Apply(ctx context.Context, b *bundle.Bundle) error {
 func uploadArtifact(ctx context.Context, a *config.Artifact, b *bundle.Bundle) error {
 	for i := range a.Files {
 		f := &a.Files[i]
+		// HACK
+		if strings.HasPrefix("/Workspace", f.Source) {
+			cmdio.LogString(ctx, fmt.Sprintf("artifacts.Upload(%s): Skipped file in workspace", f.Source))
+			return nil
+		}
 		if f.NeedsUpload() {
 			filename := filepath.Base(f.Source)
 			cmdio.LogString(ctx, fmt.Sprintf("artifacts.Upload(%s): Uploading...", filename))
