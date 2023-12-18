@@ -6,7 +6,10 @@ import (
 	"strings"
 
 	"github.com/databricks/cli/bundle"
+	"github.com/databricks/cli/bundle/deploy/terraform"
+	"github.com/databricks/cli/bundle/phases"
 	"github.com/databricks/cli/bundle/run/output"
+	"github.com/databricks/cli/libs/cmdio"
 )
 
 type key string
@@ -58,4 +61,42 @@ func Find(b *bundle.Bundle, arg string) (Runner, error) {
 	}
 
 	return runners[0], nil
+}
+
+func GetRunner(ctx context.Context, runnerName string) error {
+	b := bundle.Get(ctx)
+
+	err := bundle.Apply(ctx, b, bundle.Seq(
+		phases.Initialize(),
+		terraform.Interpolate(),
+		terraform.Write(),
+		terraform.StatePull(),
+		terraform.Load(terraform.ErrorOnEmptyState),
+	))
+	if err != nil {
+		return err
+	}
+
+	// If no arguments are specified, prompt the user to select something to run.
+	if len(args) == 0 && cmdio.IsInteractive(ctx) {
+		// Invert completions from KEY -> NAME, to NAME -> KEY.
+		inv := make(map[string]string)
+		for k, v := range run.ResourceCompletionMap(b) {
+			inv[v] = k
+		}
+		id, err := cmdio.Select(ctx, inv, "Resource to run")
+		if err != nil {
+			return err
+		}
+		args = append(args, id)
+	}
+
+	if len(args) != 1 {
+		return fmt.Errorf("expected a KEY of the resource to run")
+	}
+
+	runner, err := run.Find(b, args[0])
+	if err != nil {
+		return err
+	}
 }
