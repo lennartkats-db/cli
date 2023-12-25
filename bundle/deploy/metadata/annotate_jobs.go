@@ -26,11 +26,15 @@ func (m *annotateJobs) Apply(_ context.Context, b *bundle.Bundle) error {
 
 		job.JobSettings.Deployment = &jobs.JobDeployment{
 			Kind:             jobs.JobDeploymentKindBundle,
-			MetadataFilePath: path.Join(b.Config.Workspace.StatePath, MetadataFileName),
+			MetadataFilePath: CreateMetadataFilePath(b),
 		}
 		job.JobSettings.EditMode = jobs.JobSettingsEditModeUiLocked
 		job.JobSettings.Format = jobs.FormatMultiTask
 	}
 
 	return nil
+}
+
+func CreateMetadataFilePath(b *bundle.Bundle) string {
+	return path.Join(b.Config.Workspace.StatePath, MetadataFileName)
 }

@@ -79,6 +79,8 @@ func assertBuiltinTemplateValid(t *testing.T, settings map[string]any, target st
 	))
 	require.NoError(t, err)
 
+	assert.NotContains(t, b.Config.Workspace.RootPath, "/Shared", "Using /Shared is no longer encouraged since it's not possible to apply least-privilege permissions to subdirectories")
+
 	// Apply build mutator
 	if build {
 		err = bundle.Apply(ctx, b, phases.Build())

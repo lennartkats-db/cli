@@ -24,6 +24,7 @@ func Deploy() bundle.Mutator {
 			bundle.Seq(
 				mutator.ValidateGitDetails(),
 				libraries.MatchWithArtifacts(),
+				mutator.CheckDeploymentConflicts(),
 				artifacts.CleanUp(),
 				artifacts.UploadAll(),
 				python.TransformWheelTask(),
