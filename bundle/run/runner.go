@@ -27,18 +27,24 @@ type Runner interface {
 	// Name returns the resource's name, if defined.
 	Name() string
 
+	// Returns the canonical URL for the resource.
+	URL() string
+
+	// Determines if the underlying resource is runnable.
+	IsRunnable() bool
+
 	// Run the underlying worklow.
 	Run(ctx context.Context, opts *Options) (output.RunOutput, error)
 }
 
-// Find locates a runner matching the specified argument.
+// find locates a runner matching the specified argument.
 //
 // Its behavior is as follows:
 //  1. Try to find a resource with <key> identical to the argument.
 //  2. Try to find a resource with <type>.<key> identical to the argument.
 //
 // If an argument resolves to multiple resources, it returns an error.
-func Find(b *bundle.Bundle, arg string) (Runner, error) {
+func find(b *bundle.Bundle, arg string) (Runner, error) {
 	keyOnly, keyWithType := ResourceKeys(b)
 	if len(keyWithType) == 0 {
 		return nil, fmt.Errorf("bundle defines no resources")
@@ -63,7 +69,7 @@ func Find(b *bundle.Bundle, arg string) (Runner, error) {
 	return runners[0], nil
 }
 
-func GetRunner(ctx context.Context, runnerName string) error {
+func GetRunnerForCommand(ctx context.Context, args []string, onlyShowRunnables bool) (Runner, error) {
 	b := bundle.Get(ctx)
 
 	err := bundle.Apply(ctx, b, bundle.Seq(
@@ -74,29 +80,26 @@ func GetRunner(ctx context.Context, runnerName string) error {
 		terraform.Load(terraform.ErrorOnEmptyState),
 	))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// If no arguments are specified, prompt the user to select something to run.
 	if len(args) == 0 && cmdio.IsInteractive(ctx) {
 		// Invert completions from KEY -> NAME, to NAME -> KEY.
 		inv := make(map[string]string)
-		for k, v := range run.ResourceCompletionMap(b) {
+		for k, v := range ResourceCompletionMap(b, onlyShowRunnables) {
 			inv[v] = k
 		}
 		id, err := cmdio.Select(ctx, inv, "Resource to run")
 		if err != nil {
-			return err
+			return nil, err
 		}
 		args = append(args, id)
 	}
 
 	if len(args) != 1 {
-		return fmt.Errorf("expected a KEY of the resource to run")
+		return nil, fmt.Errorf("expected a KEY of the resource to run")
 	}
 
-	runner, err := run.Find(b, args[0])
-	if err != nil {
-		return err
-	}
+	return find(b, args[0])
 }

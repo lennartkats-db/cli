@@ -14,6 +14,10 @@ type MlflowModel struct {
 	*ml.Model
 }
 
+func (s *MlflowModel) GetURL(workspace_host string) string {
+	return workspace_host + "/ml/models/" + s.Name
+}
+
 func (s *MlflowModel) UnmarshalJSON(b []byte) error {
 	return marshal.Unmarshal(b, s)
 }

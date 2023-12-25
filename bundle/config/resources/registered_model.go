@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"strings"
+
 	"github.com/databricks/cli/bundle/config/paths"
 	"github.com/databricks/databricks-sdk-go/marshal"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -23,6 +25,10 @@ type RegisteredModel struct {
 	// This represents the input args for terraform, and will get converted
 	// to a HCL representation for CRUD
 	*catalog.CreateRegisteredModelRequest
+}
+
+func (s *RegisteredModel) GetURL(workspace_host string) string {
+	return workspace_host + "/explore/data/models/" + strings.ReplaceAll(s.ID, ".", "/")
 }
 
 func (s *RegisteredModel) UnmarshalJSON(b []byte) error {

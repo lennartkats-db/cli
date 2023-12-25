@@ -16,7 +16,7 @@ func TestFindNoResources(t *testing.T) {
 		},
 	}
 
-	_, err := Find(b, "foo")
+	_, err := find(b, "foo")
 	assert.ErrorContains(t, err, "bundle defines no resources")
 }
 
@@ -31,7 +31,7 @@ func TestFindSingleArg(t *testing.T) {
 		},
 	}
 
-	_, err := Find(b, "foo")
+	_, err := find(b, "foo")
 	assert.NoError(t, err)
 }
 
@@ -46,7 +46,7 @@ func TestFindSingleArgNotFound(t *testing.T) {
 		},
 	}
 
-	_, err := Find(b, "bar")
+	_, err := find(b, "bar")
 	assert.ErrorContains(t, err, "no such resource: bar")
 }
 
@@ -64,7 +64,7 @@ func TestFindSingleArgAmbiguous(t *testing.T) {
 		},
 	}
 
-	_, err := Find(b, "key")
+	_, err := find(b, "key")
 	assert.ErrorContains(t, err, "ambiguous: ")
 }
 
@@ -79,6 +79,6 @@ func TestFindSingleArgWithType(t *testing.T) {
 		},
 	}
 
-	_, err := Find(b, "jobs.key")
+	_, err := find(b, "jobs.key")
 	assert.NoError(t, err)
 }

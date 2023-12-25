@@ -14,6 +14,10 @@ type MlflowExperiment struct {
 	*ml.Experiment
 }
 
+func (s *MlflowExperiment) GetURL(workspace_host string) string {
+	return workspace_host + "/ml/experiments/" + s.ExperimentId
+}
+
 func (s *MlflowExperiment) UnmarshalJSON(b []byte) error {
 	return marshal.Unmarshal(b, s)
 }

@@ -24,6 +24,10 @@ type ModelServingEndpoint struct {
 	Permissions []Permission `json:"permissions,omitempty"`
 }
 
+func (s *ModelServingEndpoint) GetURL(workspace_host string) string {
+	return workspace_host + "/ml/endpoints/" + s.Name
+}
+
 func (s *ModelServingEndpoint) UnmarshalJSON(b []byte) error {
 	return marshal.Unmarshal(b, s)
 }

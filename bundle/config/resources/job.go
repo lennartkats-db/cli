@@ -16,6 +16,10 @@ type Job struct {
 	*jobs.JobSettings
 }
 
+func (s *Job) GetURL(workspace_host string) string {
+	return workspace_host + "#job/" + s.ID
+}
+
 func (s *Job) UnmarshalJSON(b []byte) error {
 	return marshal.Unmarshal(b, s)
 }

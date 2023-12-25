@@ -28,7 +28,7 @@ func newRunCommand() *cobra.Command {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
-		run.GetRunner(cmd)
+		run.GetRunnerForCommand(ctx, cmd, true)
 
 		runOptions.NoWait = noWait
 		output, err := runner.Run(ctx, &runOptions)

@@ -12,7 +12,7 @@ import (
 // same key. When this happens, the user should disambiguate between them.
 type RunnerLookup map[string][]Runner
 
-// ResourceKeys computes a map with
+// ResourceKeys computes maps with names and qualified names to runners.
 func ResourceKeys(b *bundle.Bundle) (keyOnly RunnerLookup, keyWithType RunnerLookup) {
 	keyOnly = make(RunnerLookup)
 	keyWithType = make(RunnerLookup)
@@ -34,7 +34,7 @@ func ResourceKeys(b *bundle.Bundle) (keyOnly RunnerLookup, keyWithType RunnerLoo
 }
 
 // ResourceCompletionMap returns a map of resource keys to their respective names.
-func ResourceCompletionMap(b *bundle.Bundle) map[string]string {
+func ResourceCompletionMap(b *bundle.Bundle, onlyShowRunnables bool) map[string]string {
 	out := make(map[string]string)
 	keyOnly, keyWithType := ResourceKeys(b)
 
@@ -46,7 +46,9 @@ func ResourceCompletionMap(b *bundle.Bundle) map[string]string {
 		// Invariant: len(v) >= 1. See [ResourceKeys].
 		if len(v) == 1 {
 			seen[v[0].Key()] = true
-			out[k] = v[0].Name()
+			if !onlyShowRunnables || v[0].IsRunnable() {
+				out[k] = v[0].Name()
+			}
 		}
 	}
 
@@ -57,7 +59,9 @@ func ResourceCompletionMap(b *bundle.Bundle) map[string]string {
 		if ok {
 			continue
 		}
-		out[k] = v[0].Name()
+		if !onlyShowRunnables || v[0].IsRunnable() {
+			out[k] = v[0].Name()
+		}
 	}
 
 	return out

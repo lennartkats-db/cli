@@ -18,6 +18,10 @@ type Pipeline struct {
 	*pipelines.PipelineSpec
 }
 
+func (s *Pipeline) GetURL(workspace_host string) string {
+	return workspace_host + "#joblist/pipelines/" + s.ID
+}
+
 func (s *Pipeline) UnmarshalJSON(b []byte) error {
 	return marshal.Unmarshal(b, s)
 }
