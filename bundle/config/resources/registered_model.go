@@ -34,3 +34,7 @@ func (s *RegisteredModel) UnmarshalJSON(b []byte) error {
 func (s RegisteredModel) MarshalJSON() ([]byte, error) {
 	return marshal.Marshal(s)
 }
+
+func (s RegisteredModel) IsOwnerChangeSupported() bool {
+	return true
+}

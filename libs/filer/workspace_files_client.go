@@ -137,6 +137,9 @@ func (w *WorkspaceFilesClient) Write(ctx context.Context, name string, reader io
 		// Create parent directory.
 		err = w.workspaceClient.Workspace.MkdirsByPath(ctx, path.Dir(absPath))
 		if err != nil {
+			if errors.As(err, &aerr) && aerr.StatusCode == http.StatusForbidden {
+				return PermissionError{absPath}
+			}
 			return fmt.Errorf("unable to mkdir to write file %s: %w", absPath, err)
 		}
 
@@ -160,6 +163,10 @@ func (w *WorkspaceFilesClient) Write(ctx context.Context, name string, reader io
 
 		// Default to path specified to filer.Write if regex capture fails
 		return FileAlreadyExistsError{absPath}
+	}
+
+	if aerr.StatusCode == http.StatusForbidden {
+		return PermissionError{absPath}
 	}
 
 	return err

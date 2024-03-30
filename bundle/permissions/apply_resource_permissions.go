@@ -41,13 +41,13 @@ var levelsMap = map[string](map[string]string){
 	},
 }
 
-type bundlePermissions struct{}
+type applyResourcePermissions struct{}
 
-func ApplyBundlePermissions() bundle.Mutator {
-	return &bundlePermissions{}
+func ApplyResourcePermissions() bundle.Mutator {
+	return &applyResourcePermissions{}
 }
 
-func (m *bundlePermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
+func (m *applyResourcePermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	err := validate(b)
 	if err != nil {
 		return diag.FromErr(err)
@@ -132,6 +132,6 @@ func applyForModelServiceEndpoints(ctx context.Context, b *bundle.Bundle) {
 	}
 }
 
-func (m *bundlePermissions) Name() string {
-	return "ApplyBundlePermissions"
+func (m *applyResourcePermissions) Name() string {
+	return "ApplyResourcePermissions"
 }

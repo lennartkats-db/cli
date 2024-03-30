@@ -28,6 +28,10 @@ func (s Pipeline) MarshalJSON() ([]byte, error) {
 	return marshal.Marshal(s)
 }
 
+func (s Pipeline) IsOwnerChangeSupported() bool {
+	return false
+}
+
 func (p *Pipeline) Exists(ctx context.Context, w *databricks.WorkspaceClient, id string) (bool, error) {
 	_, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
 		PipelineId: id,

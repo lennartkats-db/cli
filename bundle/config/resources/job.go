@@ -29,6 +29,10 @@ func (s Job) MarshalJSON() ([]byte, error) {
 	return marshal.Marshal(s)
 }
 
+func (s Job) IsOwnerChangeSupported() bool {
+	return true
+}
+
 func (j *Job) Exists(ctx context.Context, w *databricks.WorkspaceClient, id string) (bool, error) {
 	jobId, err := strconv.Atoi(id)
 	if err != nil {
