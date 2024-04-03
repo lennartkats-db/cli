@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/databricks/cli/bundle"
+	"github.com/databricks/cli/bundle/config/resources"
 	"github.com/databricks/cli/libs/diag"
 )
 
@@ -14,43 +15,65 @@ const CAN_MANAGE = "CAN_MANAGE"
 const CAN_VIEW = "CAN_VIEW"
 const CAN_RUN = "CAN_RUN"
 
+// The owner permission, which cannot be set directly by the user.
+// This permission may be assigned to one of the "CAN_MANAGE" users,
+// depending on the value of run_as.
+const IS_OWNER = "IS_OWNER"
+
 var allowedLevels = []string{CAN_MANAGE, CAN_VIEW, CAN_RUN}
 var levelsMap = map[string](map[string]string){
 	"jobs": {
+		IS_OWNER:   "IS_OWNER",
 		CAN_MANAGE: "CAN_MANAGE",
 		CAN_VIEW:   "CAN_VIEW",
 		CAN_RUN:    "CAN_MANAGE_RUN",
 	},
 	"pipelines": {
+		IS_OWNER:   "IS_OWNER",
 		CAN_MANAGE: "CAN_MANAGE",
 		CAN_VIEW:   "CAN_VIEW",
 		CAN_RUN:    "CAN_RUN",
 	},
 	"mlflow_experiments": {
+		IS_OWNER:   "IS_OWNER",
 		CAN_MANAGE: "CAN_MANAGE",
 		CAN_VIEW:   "CAN_READ",
 	},
 	"mlflow_models": {
+		IS_OWNER:   "IS_OWNER",
 		CAN_MANAGE: "CAN_MANAGE",
 		CAN_VIEW:   "CAN_READ",
 	},
 	"model_serving_endpoints": {
+		IS_OWNER:   "IS_OWNER",
 		CAN_MANAGE: "CAN_MANAGE",
 		CAN_VIEW:   "CAN_VIEW",
 		CAN_RUN:    "CAN_QUERY",
 	},
 }
 
-type bundlePermissions struct{}
+type applyResourcePermissions struct{}
 
-func ApplyBundlePermissions() bundle.Mutator {
-	return &bundlePermissions{}
+func ApplyResourcePermissions() bundle.Mutator {
+	return &applyResourcePermissions{}
 }
 
-func (m *bundlePermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
+func (m *applyResourcePermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	err := validate(b)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if b.Config.RunAs != nil && b.Config.RunAs.UserName != "" {
+		// If run_as is set to a human user, we make that user the owner of all resources.
+		// This makes it possible for other "can manage" users to redeploy a resource
+		// without getting an error that the owner is being changed. Changing
+		// the owner is generally not allowed (only admins can do this for some
+		// resources but we don't want to special case for admins).
+		b.Config.Permissions = append(b.Config.Permissions, resources.Permission{
+			Level:    IS_OWNER,
+			UserName: b.Config.RunAs.UserName,
+		})
 	}
 
 	applyForJobs(ctx, b)
@@ -132,6 +155,6 @@ func applyForModelServiceEndpoints(ctx context.Context, b *bundle.Bundle) {
 	}
 }
 
-func (m *bundlePermissions) Name() string {
-	return "ApplyBundlePermissions"
+func (m *applyResourcePermissions) Name() string {
+	return "ApplyResourcePermissions"
 }

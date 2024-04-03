@@ -23,6 +23,7 @@ func Deploy() bundle.Mutator {
 		lock.Acquire(),
 		bundle.Defer(
 			bundle.Seq(
+				permissions.ReportPermissionErrors(),
 				terraform.StatePull(),
 				deploy.StatePull(),
 				mutator.ValidateGitDetails(),
@@ -33,7 +34,7 @@ func Deploy() bundle.Mutator {
 				files.Upload(),
 				deploy.StateUpdate(),
 				deploy.StatePush(),
-				permissions.ApplyWorkspaceRootPermissions(),
+				permissions.ApplyFolderPermissions(),
 				terraform.Interpolate(),
 				terraform.Write(),
 				deploy.CheckRunningResource(),

@@ -40,7 +40,7 @@ func Initialize() bundle.Mutator {
 			mutator.ExpandPipelineGlobPaths(),
 			mutator.TranslatePaths(),
 			python.WrapperWarning(),
-			permissions.ApplyBundlePermissions(),
+			permissions.ApplyResourcePermissions(),
 			permissions.FilterCurrentUser(),
 			metadata.AnnotateJobs(),
 			terraform.Initialize(),

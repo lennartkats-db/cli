@@ -69,7 +69,7 @@ func Infof(format string, args ...any) Diagnostics {
 	}
 }
 
-// Diagsnostics holds zero or more instances of [Diagnostic].
+// Diagnostics holds zero or more instances of [Diagnostic].
 type Diagnostics []Diagnostic
 
 // Append adds a new diagnostic to the end of the list.
