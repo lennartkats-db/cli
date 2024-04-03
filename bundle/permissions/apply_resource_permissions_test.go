@@ -7,6 +7,7 @@ import (
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/config"
 	"github.com/databricks/cli/bundle/config/resources"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/stretchr/testify/require"
 )
 
@@ -132,4 +133,36 @@ func TestWarningOnOverlapPermission(t *testing.T) {
 	require.Contains(t, b.Config.Resources.Jobs["job_2"].Permissions, resources.Permission{Level: "CAN_MANAGE", UserName: "TestUser"})
 	require.Contains(t, b.Config.Resources.Jobs["job_2"].Permissions, resources.Permission{Level: "CAN_VIEW", GroupName: "TestGroup"})
 
+}
+
+func TestApplyBundlePermissionsWithRunAs(t *testing.T) {
+	// Create a bundle with a run_as configuration
+	b := &bundle.Bundle{
+		Config: config.Root{
+			RunAs: &jobs.JobRunAs{
+				UserName: "runasuser@company.com",
+			},
+			Workspace: config.Workspace{
+				RootPath: "/Users/foo@bar.com",
+			},
+			Permissions: []resources.Permission{
+				{Level: CAN_MANAGE, UserName: "TestUser"},
+				{Level: CAN_VIEW, GroupName: "TestGroup"},
+			},
+			Resources: config.Resources{
+				Jobs: map[string]*resources.Job{
+					"job": {},
+				},
+			},
+		},
+	}
+
+	diags := bundle.Apply(context.Background(), b, ApplyResourcePermissions())
+	require.NoError(t, diags.Error())
+
+	job := b.Config.Resources.Jobs["job"]
+	require.Contains(t, job.Permissions, resources.Permission{
+		Level:    IS_OWNER,
+		UserName: "runasuser@company.com",
+	}, "Jobs should have the IS_OWNER permission for the run_as user")
 }

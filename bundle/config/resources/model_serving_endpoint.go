@@ -33,7 +33,3 @@ func (s *ModelServingEndpoint) UnmarshalJSON(b []byte) error {
 func (s ModelServingEndpoint) MarshalJSON() ([]byte, error) {
 	return marshal.Marshal(s)
 }
-
-func (s ModelServingEndpoint) IsOwnerChangeSupported() bool {
-	return false
-}

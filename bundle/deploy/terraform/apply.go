@@ -32,7 +32,7 @@ func (w *apply) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 
 	err = tf.Apply(ctx)
 	if err != nil {
-		diagnosis := permissions.TryReportTerraformPermissionError(b, err)
+		diagnosis := permissions.TryReportTerraformPermissionError(ctx, b, err)
 		if diagnosis != nil {
 			return diagnosis
 		}

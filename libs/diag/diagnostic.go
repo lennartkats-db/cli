@@ -65,7 +65,7 @@ func Infof(format string, args ...any) Diagnostics {
 	}
 }
 
-// Diagsnostics holds zero or more instances of [Diagnostic].
+// Diagnostics holds zero or more instances of [Diagnostic].
 type Diagnostics []Diagnostic
 
 // Append adds a new diagnostic to the end of the list.
@@ -92,6 +92,9 @@ func (ds Diagnostics) HasError() bool {
 func (ds Diagnostics) Error() error {
 	for _, d := range ds {
 		if d.Severity == Error {
+			if d.Detail != "" {
+				return fmt.Errorf(d.Detail)
+			}
 			return fmt.Errorf(d.Summary)
 		}
 	}

@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -24,8 +25,14 @@ func (m *reportPermissionErrors) Name() string {
 
 func (m *reportPermissionErrors) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	canManageBundle, _ := analyzeBundlePermissions(b)
-	if !canManageBundle {
-		return diag.Errorf("User %s doesn't have the necessary permissions to deploy.\nPlease make sure the current user has CAN_MANAGE permissions in the permissions section of databricks.yml.\nSee also https://docs.databricks.com/en/dev-tools/bundles/permissions.html.", b.Config.Workspace.CurrentUser.UserName)
+	if len(b.Config.Permissions) > 0 && !canManageBundle {
+		return diag.Diagnostics{
+			{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Permissions section should list %s or one of their groups with CAN_MANAGE permissions", b.Config.Workspace.CurrentUser.UserName),
+				Location: b.Config.GetLocation("permissions"),
+			},
+		}
 	}
 
 	return nil
@@ -60,6 +67,9 @@ func hasPermissionAccordingToBundle(b *bundle.Bundle) bool {
 func analyzeBundlePermissions(b *bundle.Bundle) (bool, string) {
 	isManager := false
 	otherManagers := []string{}
+	if b.Config.RunAs != nil && b.Config.RunAs.UserName != "" {
+		otherManagers = append(otherManagers, b.Config.RunAs.UserName)
+	}
 
 	currentUser := b.Config.Workspace.CurrentUser.UserName
 	targetPermissions := b.Config.Permissions
@@ -81,13 +91,15 @@ func analyzeBundlePermissions(b *bundle.Bundle) (bool, string) {
 		// Permission doesn't apply to current user; add to otherManagers
 		otherManager := p.UserName
 		if otherManager == "" {
-			otherManager = p.ServicePrincipalName
+			otherManager = p.GroupName
 		}
 		if otherManager == "" {
-			otherManager = p.GroupName
+			// Skip service principals
+			continue
 		}
 		otherManagers = append(otherManagers, otherManager)
 	}
+
 	return isManager, strings.Join(otherManagers, ", ")
 }
 
@@ -102,61 +114,72 @@ func isGroupOfCurrentUser(b *bundle.Bundle, groupName string) bool {
 	return false
 }
 
-// func runsAsCurrentUser(b *bundle.Bundle) bool {
-// 	user := b.Config.Workspace.CurrentUser.UserName
-// 	runAs := b.Config.RunAs
-// 	return runAs == nil || runAs.UserName == user || runAs.ServicePrincipalName == user
-// }
+func runsAsCurrentUser(b *bundle.Bundle) bool {
+	user := b.Config.Workspace.CurrentUser.UserName
+	runAs := b.Config.RunAs
+	return runAs == nil || runAs.UserName == user || runAs.ServicePrincipalName == user
+}
 
 func ReportPermissionDenied(ctx context.Context, b *bundle.Bundle, path string) diag.Diagnostics {
 	log.Errorf(ctx, "Failed to update %v", path)
 
 	user := b.Config.Workspace.CurrentUser.UserName
 	_, otherManagers := analyzeBundlePermissions(b)
+	assistance := fmt.Sprintf("For assistance, users or groups who may be able to update the permissions include: %s.", otherManagers)
+	if otherManagers == "" {
+		assistance = "For assistance, contact the owners of this project."
+	}
 
 	if hasPermissionAccordingToBundle(b) {
 		// According databricks.yml, the current user has the right permissions.
 		// But we're still seeing permission errors. So someone else will need
 		// to redeploy the bundle with the right set of permissions.
-		return diag.Errorf("permission error [EPERM1]: access denied to update permissions for %s.\n"+
-			"For assistance, users or groups who may be able to update the permissions include: %s.\n"+
+		return diag.Errorf("permission error [EPERM1]: access denied updating deployment permissions for %s.\n"+
+			"%s\n"+
 			"They can redeploy the project to apply the latest set of permissions.\n"+
 			"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-			user, otherManagers)
+			user, assistance)
 	}
 
 	return diag.Errorf("permission error [EPERM2]: %s doesn't have the necessary permissions to deploy.\n"+
-		"For assistance, users or groups who may be able to update the permissions include: %s.\n"+
+		"%s\n"+
 		"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-		user, otherManagers)
+		user, assistance)
 
 }
 
-func TryReportTerraformPermissionError(b *bundle.Bundle, err error) diag.Diagnostics {
+func TryReportTerraformPermissionError(ctx context.Context, b *bundle.Bundle, err error) diag.Diagnostics {
 	_, otherManagers := analyzeBundlePermissions(b)
-
-	if strings.Contains(err.Error(), "cannot update permissions") || strings.Contains(err.Error(), "permissions on pipeline") {
-		// Best-effort attempt to extract the resource name from the error message.
-		re := regexp.MustCompile(`databricks_(\w*)\.[^-]*-(\w*)`)
-		match := re.FindStringSubmatch(err.Error())
-		resourceName := "resource"
-
-		if len(match) > 1 {
-			resourceName = match[2]
-			resource, err := b.Config.Resources.FindResourceByConfigKey(resourceName)
-			if err == nil && !resource.IsOwnerChangeSupported() {
-				return diag.Errorf("permission error [EPERM3]: unable change permissions of %s.\n"+
-					"For this resource type, only deployment by the current owner of the resource or a workspace admin is supported.\n"+
-					"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-					resourceName)
-			}
-		}
-		return diag.Errorf("permission error [EPERM4]: access denied updating %s.\n"+
-			"For assistance, users or groups who may be able to update the permissions include: %s.\n"+
-			"They can redeploy the project to apply the latest set of permissions.\n"+
-			"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-			resourceName, otherManagers)
+	assistance := fmt.Sprintf("For assistance, users or groups who may be able to update the permissions include: %s.", otherManagers)
+	if otherManagers == "" {
+		assistance = "For assistance, contact the owners of this project."
 	}
 
-	return nil
+	if !strings.Contains(err.Error(), "cannot update permissions") && !strings.Contains(err.Error(), "permissions on pipeline") && !strings.Contains(err.Error(), "cannot read permissions") {
+		return nil
+	}
+
+	log.Errorf(ctx, "Terraform error during deployment: %v", err.Error())
+
+	// Best-effort attempt to extract the resource name from the error message.
+	re := regexp.MustCompile(`databricks_(\w*)\.(\w*)`)
+	match := re.FindStringSubmatch(err.Error())
+	resource := "resource"
+	if len(match) > 1 {
+		resource = match[2]
+	}
+
+	if runsAsCurrentUser(b) {
+		return diag.Errorf("permission error [EPERM3]: access denied updating permissions to %s.\n"+
+			"Redeploying resources with another owner or run_as identity is currently not supported.\n"+
+			"%s\n"+
+			"Only the current owner of the resource or a workspace admin can redeploy this resource.\n"+
+			"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
+			resource, assistance)
+	}
+	return diag.Errorf("permission error [EPERM3a]: access denied updating permissions to %s.\n"+
+		"%s\n"+
+		"They can redeploy the project to apply the latest set of permissions.\n"+
+		"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
+		resource, assistance)
 }

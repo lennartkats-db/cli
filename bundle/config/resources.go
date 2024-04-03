@@ -29,10 +29,6 @@ type ConfigResource interface {
 	Exists(ctx context.Context, w *databricks.WorkspaceClient, id string) (bool, error)
 	TerraformResourceName() string
 
-	// IsOwnerChangeSupported returns true if the resource supports changing the owner or run_as identity
-	// to the calling user (provided they have "can manage" on that resource).
-	IsOwnerChangeSupported() bool
-
 	json.Marshaler
 	json.Unmarshaler
 }

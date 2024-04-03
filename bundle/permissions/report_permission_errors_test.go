@@ -8,7 +8,9 @@ import (
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/config"
 	"github.com/databricks/cli/bundle/config/resources"
+	"github.com/databricks/cli/libs/diag"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,7 +29,31 @@ func TestApplyFail(t *testing.T) {
 	})
 
 	diags := ReportPermissionErrors().Apply(context.Background(), b)
-	require.ErrorContains(t, diags.Error(), "necessary permissions to deploy")
+	require.Equal(t, diags[0].Severity, diag.Warning)
+	require.Contains(t, diags[0].Summary, "testuser@databricks.com")
+}
+
+func TestApplySuccesWithOwner(t *testing.T) {
+	// "IS_OWNER" might be inserted by run_as, but should be ignored
+	b := mockBundle([]resources.Permission{
+		{Level: "IS_OWNER", UserName: "testuser@databricks.com"},
+	})
+
+	diags := ReportPermissionErrors().Apply(context.Background(), b)
+	require.Equal(t, diags[0].Severity, diag.Warning)
+	require.Contains(t, diags[0].Summary, "testuser@databricks.com")
+}
+
+func TestApplyFailWithOwner(t *testing.T) {
+	// "IS_OWNER" might be inserted by run_as, but should be ignored
+	b := mockBundle([]resources.Permission{
+		{Level: "IS_OWNER", UserName: "testuser@databricks.com"},
+		{Level: "CAN_VIEW", UserName: "testuser@databricks.com"},
+	})
+
+	diags := ReportPermissionErrors().Apply(context.Background(), b)
+	require.Equal(t, diags[0].Severity, diag.Warning)
+	require.Contains(t, diags[0].Summary, "testuser@databricks.com")
 }
 
 func TestPermissionDeniedWithPermission(t *testing.T) {
@@ -36,7 +62,7 @@ func TestPermissionDeniedWithPermission(t *testing.T) {
 	})
 
 	diags := ReportPermissionDenied(context.Background(), b, "testpath")
-	require.ErrorContains(t, diags.Error(), "access denied to update permissions")
+	require.ErrorContains(t, diags.Error(), "EPERM1")
 }
 
 func TestPermissionDeniedWithoutPermission(t *testing.T) {
@@ -66,10 +92,11 @@ func TestFindOtherOwners(t *testing.T) {
 }
 
 func TestReportTerraformError1(t *testing.T) {
+	ctx := context.Background()
 	b := mockBundle([]resources.Permission{
 		{Level: "CAN_MANAGE", UserName: "alice@databricks.com"},
 	})
-	err := TryReportTerraformPermissionError(b, errors.New(`Error: terraform apply: exit status 1
+	err := TryReportTerraformPermissionError(ctx, b, errors.New(`Error: terraform apply: exit status 1
 
 Error: cannot update permissions: ...
 
@@ -77,14 +104,14 @@ Error: cannot update permissions: ...
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
 	require.ErrorContains(t, err, "EPERM3")
-	require.ErrorContains(t, err, "pipeline")
 }
 
 func TestReportTerraformError2(t *testing.T) {
+	ctx := context.Background()
 	b := mockBundle([]resources.Permission{
 		{Level: "CAN_MANAGE", UserName: "alice@databricks.com"},
 	})
-	err := TryReportTerraformPermissionError(b, errors.New(`Error: terraform apply: exit status 1
+	err := TryReportTerraformPermissionError(ctx, b, errors.New(`Error: terraform apply: exit status 1
 
 Error: cannot read pipeline: User xyz does not have View permissions on pipeline 4521dbb6-42aa-418c-b94d-b5f4859a3454.
 
@@ -92,7 +119,39 @@ Error: cannot read pipeline: User xyz does not have View permissions on pipeline
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
 	require.ErrorContains(t, err, "EPERM3")
-	require.ErrorContains(t, err, "pipeline")
+}
+
+func TestReportTerraformError3(t *testing.T) {
+	ctx := context.Background()
+	b := mockBundle([]resources.Permission{
+		{Level: "CAN_MANAGE", UserName: "alice@databricks.com"},
+	})
+	err := TryReportTerraformPermissionError(ctx, b, errors.New(`Error: terraform apply: exit status 1
+
+	Error: cannot read permissions: 1706906c-c0a2-4c25-9f57-3a7aa3cb8b90 does not have Owner permissions on Job with ID: ElasticJobId(28263044278868). Please contact the owner or an administrator for access.
+
+	with databricks_pipeline.my_project_pipeline,
+	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
+	39:       }`)).Error()
+	require.ErrorContains(t, err, "EPERM3")
+}
+
+func TestReportTerraformErrorNotOwner(t *testing.T) {
+	ctx := context.Background()
+	b := mockBundle([]resources.Permission{
+		{Level: "CAN_MANAGE", UserName: "alice@databricks.com"},
+	})
+	b.Config.RunAs = &jobs.JobRunAs{
+		UserName: "testuser@databricks.com",
+	}
+	err := TryReportTerraformPermissionError(ctx, b, errors.New(`Error: terraform apply: exit status 1
+
+Error: cannot read pipeline: User xyz does not have View permissions on pipeline 4521dbb6-42aa-418c-b94d-b5f4859a3454.
+
+	with databricks_pipeline.my_project_pipeline,
+	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
+	39:       }`)).Error()
+	require.ErrorContains(t, err, "EPERM3")
 }
 
 func mockBundle(permissions []resources.Permission) *bundle.Bundle {

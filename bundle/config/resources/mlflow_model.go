@@ -23,7 +23,3 @@ func (s *MlflowModel) UnmarshalJSON(b []byte) error {
 func (s MlflowModel) MarshalJSON() ([]byte, error) {
 	return marshal.Marshal(s)
 }
-
-func (s MlflowModel) IsOwnerChangeSupported() bool {
-	return true
-}

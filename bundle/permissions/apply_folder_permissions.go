@@ -67,7 +67,7 @@ func giveAccessForWorkspaceRoot(ctx context.Context, b *bundle.Bundle) error {
 
 func getWorkspaceObjectPermissionLevel(bundlePermission string) (workspace.WorkspaceObjectPermissionLevel, error) {
 	switch bundlePermission {
-	case CAN_MANAGE:
+	case CAN_MANAGE, IS_OWNER:
 		return workspace.WorkspaceObjectPermissionLevelCanManage, nil
 	case CAN_RUN:
 		return workspace.WorkspaceObjectPermissionLevelCanRun, nil
