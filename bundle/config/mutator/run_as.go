@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/databricks/cli/bundle"
+	"github.com/databricks/cli/bundle/permissions"
 	"github.com/databricks/cli/libs/diag"
 	"github.com/databricks/cli/libs/dyn"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
@@ -38,7 +39,7 @@ type errUnsupportedResourceTypeForRunAs struct {
 // TODO(6 March 2024): Link the docs page describing run_as semantics in the error below
 // once the page is ready.
 func (e errUnsupportedResourceTypeForRunAs) Error() string {
-	return fmt.Sprintf("permission error [EPERM4]: %s are not supported when the current deployment user is different from the bundle's run_as identity. Please deploy as the run_as identity. Location of the unsupported resource: %s. Current identity: %s. Run as identity: %s", e.resourceType, e.resourceLocation, e.currentUser, e.runAsUser)
+	return fmt.Sprintf("permission error [%s]: %s are not supported when the current deployment user is different from the bundle's run_as identity. Please deploy as the run_as identity. Location of the unsupported resource: %s. Current identity: %s. Run as identity: %s", permissions.ErrorRunAsDenied, e.resourceType, e.resourceLocation, e.currentUser, e.runAsUser)
 }
 
 type errBothSpAndUserSpecified struct {

@@ -11,6 +11,15 @@ import (
 	"github.com/databricks/cli/libs/log"
 )
 
+// We recognize many different kinds of permission errors.
+// They are assigned different error codes to help support customers
+// and potentially aid in future tooling support.
+const ErrorCannotChangePathPermissions = "EPERM1"
+const ErrorPathAccessDenied = "EPERM2"
+const ErrorCannotChangeResourcePermissions = "EPERM3"
+const ErrorResourceAccessDenied = "EPERM4"
+const ErrorRunAsDenied = "EPERM5"
+
 const CheckPermissionsFilename = "permissions.check"
 
 type reportPermissionErrors struct{}
@@ -134,17 +143,17 @@ func ReportPermissionDenied(ctx context.Context, b *bundle.Bundle, path string) 
 		// According databricks.yml, the current user has the right permissions.
 		// But we're still seeing permission errors. So someone else will need
 		// to redeploy the bundle with the right set of permissions.
-		return diag.Errorf("permission error [EPERM1]: access denied updating deployment permissions for %s.\n"+
+		return diag.Errorf("permission error [%s]: access denied updating deployment permissions for %s.\n"+
 			"%s\n"+
 			"They can redeploy the project to apply the latest set of permissions.\n"+
 			"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-			user, assistance)
+			ErrorCannotChangePathPermissions, user, assistance)
 	}
 
-	return diag.Errorf("permission error [EPERM2]: %s doesn't have the necessary permissions to deploy.\n"+
+	return diag.Errorf("permission error [%s]: %s doesn't have the necessary permissions to deploy.\n"+
 		"%s\n"+
 		"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-		user, assistance)
+		ErrorPathAccessDenied, user, assistance)
 
 }
 
@@ -170,16 +179,16 @@ func TryReportTerraformPermissionError(ctx context.Context, b *bundle.Bundle, er
 	}
 
 	if runsAsCurrentUser(b) {
-		return diag.Errorf("permission error [EPERM3]: access denied updating permissions to %s.\n"+
+		return diag.Errorf("permission error [%s]: access denied updating permissions to %s.\n"+
 			"Redeploying resources with another owner or run_as identity is currently not supported.\n"+
 			"%s\n"+
 			"Only the current owner of the resource or a workspace admin can redeploy this resource.\n"+
 			"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-			resource, assistance)
+			ErrorCannotChangeResourcePermissions, resource, assistance)
 	}
-	return diag.Errorf("permission error [EPERM3a]: access denied updating permissions to %s.\n"+
+	return diag.Errorf("permission error [%s]: access denied updating permissions to %s.\n"+
 		"%s\n"+
 		"They can redeploy the project to apply the latest set of permissions.\n"+
 		"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-		resource, assistance)
+		ErrorResourceAccessDenied, resource, assistance)
 }
