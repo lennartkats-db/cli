@@ -166,3 +166,17 @@ func TestApplyBundlePermissionsWithRunAs(t *testing.T) {
 		UserName: "runasuser@company.com",
 	}, "Jobs should have the IS_OWNER permission for the run_as user")
 }
+
+func TestErrorOnOwnerLevel(t *testing.T) {
+	// Create a bundle with a run_as configuration
+	b := &bundle.Bundle{
+		Config: config.Root{
+			Permissions: []resources.Permission{
+				{Level: IS_OWNER, UserName: "TestUser"},
+			},
+		},
+	}
+
+	diags := bundle.Apply(context.Background(), b, ApplyResourcePermissions())
+	require.ErrorContains(t, diags.Error(), "invalid permission level")
+}

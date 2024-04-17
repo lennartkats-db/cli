@@ -102,7 +102,7 @@ func TestIncompatibleWheelTasksWithJobClusterKey(t *testing.T) {
 	require.True(t, hasIncompatibleWheelTasks(context.Background(), b))
 
 	diags := bundle.Apply(context.Background(), b, WrapperWarning())
-	require.ErrorContains(t, diags.Error(), "python wheel tasks with local libraries require compute with DBR 13.1+.")
+	require.ErrorContains(t, diags.Error(), "Python wheel tasks require")
 }
 
 func TestIncompatibleWheelTasksWithExistingClusterId(t *testing.T) {

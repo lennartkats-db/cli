@@ -23,7 +23,6 @@ func Deploy() bundle.Mutator {
 		lock.Acquire(),
 		bundle.Defer(
 			bundle.Seq(
-				permissions.ReportPermissionErrors(),
 				terraform.StatePull(),
 				deploy.StatePull(),
 				mutator.ValidateGitDetails(),

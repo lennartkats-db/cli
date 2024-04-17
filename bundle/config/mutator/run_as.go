@@ -5,9 +5,8 @@ import (
 	"fmt"
 
 	"github.com/databricks/cli/bundle"
-	"github.com/databricks/cli/bundle/permissions"
+	"github.com/databricks/cli/bundle/config/resources"
 	"github.com/databricks/cli/libs/diag"
-	"github.com/databricks/cli/libs/dyn"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 )
 
@@ -29,46 +28,21 @@ func (m *setRunAs) Name() string {
 	return "SetRunAs"
 }
 
-type errUnsupportedResourceTypeForRunAs struct {
-	resourceType     string
-	resourceLocation dyn.Location
-	currentUser      string
-	runAsUser        string
-}
-
-// TODO(6 March 2024): Link the docs page describing run_as semantics in the error below
-// once the page is ready.
-func (e errUnsupportedResourceTypeForRunAs) Error() string {
-	return fmt.Sprintf("permission error [%s]: %s are not supported when the current deployment user is different from the bundle's run_as identity. Please deploy as the run_as identity. Location of the unsupported resource: %s. Current identity: %s. Run as identity: %s", permissions.ErrorRunAsDenied, e.resourceType, e.resourceLocation, e.currentUser, e.runAsUser)
-}
-
-type errBothSpAndUserSpecified struct {
-	spName   string
-	spLoc    dyn.Location
-	userName string
-	userLoc  dyn.Location
-}
-
-func (e errBothSpAndUserSpecified) Error() string {
-	return fmt.Sprintf("run_as section must specify exactly one identity. A service_principal_name %q is specified at %s. A user_name %q is defined at %s", e.spName, e.spLoc, e.userName, e.userLoc)
-}
-
-func validateRunAs(b *bundle.Bundle) error {
+func validateRunAs(b *bundle.Bundle) diag.Diagnostics {
 	runAs := b.Config.RunAs
 
 	// Error if neither service_principal_name nor user_name are specified
 	if runAs.ServicePrincipalName == "" && runAs.UserName == "" {
-		return fmt.Errorf("run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified at %s", b.Config.GetLocation("run_as"))
+		return diag.Errorf("run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified at %s", b.Config.GetLocation("run_as"))
 	}
 
 	// Error if both service_principal_name and user_name are specified
 	if runAs.UserName != "" && runAs.ServicePrincipalName != "" {
-		return errBothSpAndUserSpecified{
-			spName:   runAs.ServicePrincipalName,
-			userName: runAs.UserName,
-			spLoc:    b.Config.GetLocation("run_as.service_principal_name"),
-			userLoc:  b.Config.GetLocation("run_as.user_name"),
-		}
+		return diag.Diagnostics{{
+			Summary:  "run_as section cannot specify both user_name and service_principal_name",
+			Location: b.Config.GetLocation("run_as"),
+			Severity: diag.Error,
+		}}
 	}
 
 	identity := runAs.ServicePrincipalName
@@ -81,26 +55,40 @@ func validateRunAs(b *bundle.Bundle) error {
 		return nil
 	}
 
-	// DLT pipelines do not support run_as in the API.
-	if len(b.Config.Resources.Pipelines) > 0 {
-		return errUnsupportedResourceTypeForRunAs{
-			resourceType:     "pipelines",
-			resourceLocation: b.Config.GetLocation("resources.pipelines"),
-			currentUser:      b.Config.Workspace.CurrentUser.UserName,
-			runAsUser:        identity,
-		}
+	// DLT pipelines do not support run_as in the API, so they require owner==run_as
+	for _, p := range b.Config.Resources.Pipelines {
+		checkValidOwnerForUnsupportedType(b, runAs, "pipelines", p.ID, p.Permissions)
 	}
 
-	// Model serving endpoints do not support run_as in the API.
-	if len(b.Config.Resources.ModelServingEndpoints) > 0 {
-		return errUnsupportedResourceTypeForRunAs{
-			resourceType:     "model_serving_endpoints",
-			resourceLocation: b.Config.GetLocation("resources.model_serving_endpoints"),
-			currentUser:      b.Config.Workspace.CurrentUser.UserName,
-			runAsUser:        identity,
-		}
+	// Model serving endpoints do not support run_as in the API, so they require owner==run_as
+	for _, p := range b.Config.Resources.ModelServingEndpoints {
+		checkValidOwnerForUnsupportedType(b, runAs, "model_serving_endpoints", p.ID, p.Permissions)
 	}
 
+	return nil
+}
+
+func checkValidOwnerForUnsupportedType(b *bundle.Bundle, runas *jobs.JobRunAs, resourceType string, resourceId string, permissions []resources.Permission) diag.Diagnostics {
+	for _, p := range permissions {
+		if p.Level == "IS_OWNER" {
+			if p.UserName == runas.UserName {
+				return nil
+			}
+			if p.ServicePrincipalName == runas.ServicePrincipalName {
+				return nil
+			}
+			return diag.Diagnostics{{
+				Summary: fmt.Sprint(
+					"%s do not support a setting a run_as user that is different from the owner.\n"+
+						"See https://docs.databricks.com/en/dev-tools/bundles/run-as.html to learn more about the run_as property.",
+					resourceType,
+				),
+				Location: b.Config.GetLocation(fmt.Sprint("resources.%s.%s", resourceType, resourceId)),
+				Severity: diag.Error,
+				ID:       diag.RunAsDenied,
+			}}
+		}
+	}
 	return nil
 }
 
@@ -112,8 +100,8 @@ func (m *setRunAs) Apply(_ context.Context, b *bundle.Bundle) diag.Diagnostics {
 	}
 
 	// Assert the run_as configuration is valid in the context of the bundle
-	if err := validateRunAs(b); err != nil {
-		return diag.FromErr(err)
+	if diag := validateRunAs(b); diag != nil {
+		return diag
 	}
 
 	// Set run_as for jobs

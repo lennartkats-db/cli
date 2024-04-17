@@ -10,6 +10,13 @@ type Experimental struct {
 	// In this case the configured wheel task will be deployed as a notebook task which install defined wheel in runtime and executes it.
 	// For more details see https://github.com/databricks/cli/pull/797 and https://github.com/databricks/cli/pull/635
 	PythonWheelWrapper bool `json:"python_wheel_wrapper,omitempty"`
+
+	// A revised permission model where:
+	// - The run_as identity is the default owner of resources
+	//	 instead of the deployment identity (see ApplyResourcePermissions)
+	// - Bundles must explicitly list all users with deployment permissions
+	//   (or they should list no permissions at all).
+	NewPermissionModel bool `json:"new_permission_model,omitempty`
 }
 
 type Command string
