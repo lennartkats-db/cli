@@ -7,7 +7,6 @@ import (
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/config"
 	"github.com/databricks/cli/bundle/config/resources"
-	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/stretchr/testify/require"
 )
 
@@ -135,23 +134,25 @@ func TestWarningOnOverlapPermission(t *testing.T) {
 
 }
 
-func TestApplyBundlePermissionsWithRunAs(t *testing.T) {
+func TestOwnerLevel(t *testing.T) {
 	// Create a bundle with a run_as configuration
 	b := &bundle.Bundle{
 		Config: config.Root{
-			RunAs: &jobs.JobRunAs{
-				UserName: "runasuser@company.com",
-			},
-			Workspace: config.Workspace{
-				RootPath: "/Users/foo@bar.com",
-			},
 			Permissions: []resources.Permission{
-				{Level: CAN_MANAGE, UserName: "TestUser"},
-				{Level: CAN_VIEW, GroupName: "TestGroup"},
+				{Level: IS_OWNER, UserName: "Alice"},
 			},
 			Resources: config.Resources{
 				Jobs: map[string]*resources.Job{
-					"job": {},
+					"job_1": {
+						Permissions: []resources.Permission{
+							{Level: CAN_MANAGE, UserName: "Bob"},
+						},
+					},
+					"job_2": {
+						Permissions: []resources.Permission{
+							{Level: IS_OWNER, UserName: "Bob"},
+						},
+					},
 				},
 			},
 		},
@@ -159,24 +160,8 @@ func TestApplyBundlePermissionsWithRunAs(t *testing.T) {
 
 	diags := bundle.Apply(context.Background(), b, ApplyResourcePermissions())
 	require.NoError(t, diags.Error())
-
-	job := b.Config.Resources.Jobs["job"]
-	require.Contains(t, job.Permissions, resources.Permission{
-		Level:    IS_OWNER,
-		UserName: "runasuser@company.com",
-	}, "Jobs should have the IS_OWNER permission for the run_as user")
-}
-
-func TestErrorOnOwnerLevel(t *testing.T) {
-	// Create a bundle with a run_as configuration
-	b := &bundle.Bundle{
-		Config: config.Root{
-			Permissions: []resources.Permission{
-				{Level: IS_OWNER, UserName: "TestUser"},
-			},
-		},
-	}
-
-	diags := bundle.Apply(context.Background(), b, ApplyResourcePermissions())
-	require.ErrorContains(t, diags.Error(), "invalid permission level")
+	require.Contains(t, b.Config.Resources.Jobs["job_1"].Permissions, resources.Permission{Level: "CAN_MANAGE", UserName: "Bob"})
+	require.Contains(t, b.Config.Resources.Jobs["job_1"].Permissions, resources.Permission{Level: "IS_OWNER", UserName: "Alice"})
+	require.Contains(t, b.Config.Resources.Jobs["job_2"].Permissions, resources.Permission{Level: "IS_OWNER", UserName: "Bob"})
+	require.NotContains(t, b.Config.Resources.Jobs["job_2"].Permissions, resources.Permission{Level: "IS_OWNER", UserName: "Alice"})
 }
