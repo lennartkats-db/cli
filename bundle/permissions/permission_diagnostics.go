@@ -30,7 +30,7 @@ func (m *reportPermissionErrors) Apply(ctx context.Context, b *bundle.Bundle) di
 	}
 
 	canManageBundle, _ := analyzeBundlePermissions(b)
-	if !canManageBundle {
+	if canManageBundle {
 		return nil
 	}
 
@@ -61,7 +61,7 @@ func analyzeBundlePermissions(b *bundle.Bundle) (bool, string) {
 	currentUser := b.Config.Workspace.CurrentUser.UserName
 	targetPermissions := b.Config.Permissions
 	for _, p := range targetPermissions {
-		if p.Level != "CAN_MANAGE" {
+		if p.Level != CAN_MANAGE && p.Level != IS_OWNER {
 			continue
 		}
 
@@ -94,7 +94,7 @@ func analyzeBundlePermissions(b *bundle.Bundle) (bool, string) {
 
 	assistance := "For assistance, contact the owners of this project."
 	if len(managersSlice) > 0 {
-		assistance = fmt.Sprintf("For assistance, users or groups who may be able to update the permissions include: %s.", strings.Join(managersSlice, ", "))
+		assistance = fmt.Sprintf("For assistance, users or groups with appropriate permissions may include: %s.", strings.Join(managersSlice, ", "))
 	}
 	return canManageBundle, assistance
 }
@@ -110,25 +110,19 @@ func isGroupOfCurrentUser(b *bundle.Bundle, groupName string) bool {
 	return false
 }
 
-func runsAsCurrentUser(b *bundle.Bundle) bool {
-	user := b.Config.Workspace.CurrentUser.UserName
-	runAs := b.Config.RunAs
-	return runAs == nil || runAs.UserName == user || runAs.ServicePrincipalName == user
-}
-
 func ReportPermissionDenied(ctx context.Context, b *bundle.Bundle, path string) diag.Diagnostics {
 	log.Errorf(ctx, "Failed to update %v", path)
 
-	user := b.Config.Workspace.CurrentUser.UserName
+	user := b.Config.Workspace.CurrentUser.DisplayName
 	canManageBundle, assistance := analyzeBundlePermissions(b)
 
 	if !canManageBundle {
 		return diag.Diagnostics{{
-			Summary: fmt.Sprintf("deployment access denied for %s.\n"+
+			Summary: fmt.Sprintf("deployment permission denied for %s.\n"+
 				"Please make sure the current user or one of their groups is listed under the permissions of this bundle.\n"+
 				"%s\n"+
 				"They may need to redeploy the bundle to apply the new permissions.\n"+
-				"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
+				"Please refer to https://docs.databricks.com/dev-tools/bundles/permissions.html for more on managing permissions.",
 				user, assistance),
 			Severity: diag.Error,
 			ID:       diag.PermissionNotIncluded,
@@ -139,10 +133,10 @@ func ReportPermissionDenied(ctx context.Context, b *bundle.Bundle, path string) 
 	// But we're still seeing permission errors. So someone else will need
 	// to redeploy the bundle with the right set of permissions.
 	return diag.Diagnostics{{
-		Summary: fmt.Sprintf("access denied updating deployment permissions for %s.\n"+
+		Summary: fmt.Sprintf("access denied while updating deployment permissions for %s.\n"+
 			"%s\n"+
 			"They can redeploy the project to apply the latest set of permissions.\n"+
-			"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
+			"Please refer to https://docs.databricks.com/dev-tools/bundles/permissions.html for more on managing permissions.",
 			user, assistance),
 		Severity: diag.Error,
 		ID:       diag.CannotChangePathPermissions,
@@ -152,7 +146,15 @@ func ReportPermissionDenied(ctx context.Context, b *bundle.Bundle, path string) 
 func TryReportTerraformPermissionError(ctx context.Context, b *bundle.Bundle, err error) diag.Diagnostics {
 	_, assistance := analyzeBundlePermissions(b)
 
-	if !strings.Contains(err.Error(), "cannot update permissions") && !strings.Contains(err.Error(), "permissions on pipeline") && !strings.Contains(err.Error(), "cannot read permissions") {
+	// In a best-effort attempt to provide curated error messages, we match
+	// against a few specific error messages that come from the Jobs and Pipelines API.
+	// Matching against messages isn't ideal but it's the best we can do right now.
+	// In the event one of these messages changes, we just show the direct API
+	// error instead.
+	if !strings.Contains(err.Error(), "cannot update permissions") &&
+		!strings.Contains(err.Error(), "permissions on pipeline") &&
+		!strings.Contains(err.Error(), "cannot read permissions") &&
+		!strings.Contains(err.Error(), "annot set run_as to user") {
 		return nil
 	}
 
@@ -166,25 +168,13 @@ func TryReportTerraformPermissionError(ctx context.Context, b *bundle.Bundle, er
 		resource = match[2]
 	}
 
-	if runsAsCurrentUser(b) {
-		return diag.Diagnostics{{
-			Summary: fmt.Sprintf("access denied updating permissions to %s.\n"+
-				"Redeploying resources with another owner or run_as identity is currently not supported.\n"+
-				"%s\n"+
-				"Only the current owner of the resource or a workspace admin can redeploy this resource.\n"+
-				"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
-				resource, assistance),
-			Severity: diag.Error,
-			ID:       diag.CannotChangeResourcePermissions,
-		}}
-	}
 	return diag.Diagnostics{{
-		Summary: fmt.Sprintf("access denied updating permissions to %s.\n"+
+		Summary: fmt.Sprintf("permission denied creating or updating %s.\n"+
 			"%s\n"+
 			"They can redeploy the project to apply the latest set of permissions.\n"+
-			"Please refer to https://docs.databricks.com/en/dev-tools/bundles/permissions.html for more on managing permissions.",
+			"Please refer to https://docs.databricks.com/dev-tools/bundles/permissions.html for more on managing permissions.",
 			resource, assistance),
 		Severity: diag.Error,
-		ID:       diag.ResourceAccessDenied,
+		ID:       diag.ResourcePermissionDenied,
 	}}
 }

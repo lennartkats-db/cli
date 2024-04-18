@@ -78,12 +78,12 @@ func checkValidOwnerForUnsupportedType(b *bundle.Bundle, runas *jobs.JobRunAs, r
 				return nil
 			}
 			return diag.Diagnostics{{
-				Summary: fmt.Sprint(
+				Summary: fmt.Sprintf(
 					"%s do not support a setting a run_as user that is different from the owner.\n"+
-						"See https://docs.databricks.com/en/dev-tools/bundles/run-as.html to learn more about the run_as property.",
+						"See https://docs.databricks.com/dev-tools/bundles/run-as.html to learn more about the run_as property.",
 					resourceType,
 				),
-				Location: b.Config.GetLocation(fmt.Sprint("resources.%s.%s", resourceType, resourceId)),
+				Location: b.Config.GetLocation(fmt.Sprintf("resources.%s.%s", resourceType, resourceId)),
 				Severity: diag.Error,
 				ID:       diag.RunAsDenied,
 			}}

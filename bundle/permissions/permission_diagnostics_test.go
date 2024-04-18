@@ -62,7 +62,7 @@ func TestPermissionDeniedWithPermission(t *testing.T) {
 	})
 
 	diags := ReportPermissionDenied(context.Background(), b, "testpath")
-	require.ErrorContains(t, diags.Error(), "EPERM1")
+	require.ErrorContains(t, diags.Error(), string(diag.CannotChangePathPermissions))
 }
 
 func TestPermissionDeniedWithoutPermission(t *testing.T) {
@@ -71,7 +71,7 @@ func TestPermissionDeniedWithoutPermission(t *testing.T) {
 	})
 
 	diags := ReportPermissionDenied(context.Background(), b, "testpath")
-	require.ErrorContains(t, diags.Error(), "necessary permissions to deploy")
+	require.Equal(t, diags.Error(), string(diag.PermissionNotIncluded))
 }
 
 func TestPermissionDeniedNilPermission(t *testing.T) {
@@ -103,7 +103,7 @@ Error: cannot update permissions: ...
 	with databricks_pipeline.my_project_pipeline,
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
-	require.ErrorContains(t, err, "EPERM3")
+	require.ErrorContains(t, err, string(diag.ResourcePermissionDenied))
 }
 
 func TestReportTerraformError2(t *testing.T) {
@@ -118,7 +118,7 @@ Error: cannot read pipeline: User xyz does not have View permissions on pipeline
 	with databricks_pipeline.my_project_pipeline,
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
-	require.ErrorContains(t, err, "EPERM3")
+	require.ErrorContains(t, err, string(diag.ResourcePermissionDenied))
 }
 
 func TestReportTerraformError3(t *testing.T) {
@@ -133,7 +133,7 @@ func TestReportTerraformError3(t *testing.T) {
 	with databricks_pipeline.my_project_pipeline,
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
-	require.ErrorContains(t, err, "EPERM3")
+	require.ErrorContains(t, err, string(diag.ResourcePermissionDenied))
 }
 
 func TestReportTerraformErrorNotOwner(t *testing.T) {
@@ -151,7 +151,7 @@ Error: cannot read pipeline: User xyz does not have View permissions on pipeline
 	with databricks_pipeline.my_project_pipeline,
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
-	require.ErrorContains(t, err, "EPERM3")
+	require.ErrorContains(t, err, string(diag.ResourcePermissionDenied))
 }
 
 func mockBundle(permissions []resources.Permission) *bundle.Bundle {
