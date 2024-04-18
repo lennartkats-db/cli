@@ -3,6 +3,19 @@
 bundle:
   name: {{.project_name}}
 
+{{- $dev_schema := .shared_schema }}
+{{- $prod_schema := .shared_schema }}
+{{- if (regexp "^yes").MatchString .personal_schemas}}
+  {{- $dev_schema = "${workspace.current_user.short_name}"}}
+  {{- $prod_schema = "default"}}
+{{- end}}
+{{- $userSpec := "" }}
+{{- if is_service_principal}}
+  {{- $userSpec = printf "service_principal_name: %s" user_name}}
+{{- else}}
+   {{- $userSpec = printf "user_name: %s" user_name}}
+{{- end}}
+
 include:
   - resources/*.yml
 
@@ -14,13 +27,6 @@ variables:
     description: The catalog to use
   schema:
     description: The schema to use
-
-{{- $dev_schema := .shared_schema }}
-{{- $prod_schema := .shared_schema }}
-{{- if (regexp "^yes").MatchString .personal_schemas}}
-  {{- $dev_schema = "${workspace.current_user.short_name}"}}
-  {{- $prod_schema = "default"}}
-{{- end}}
 
 targets:
   dev:
@@ -46,18 +52,8 @@ targets:
       warehouse_id: {{index ((regexp "[^/]+$").FindStringSubmatch .http_path) 0}}
       catalog: {{.default_catalog}}
       schema: {{$prod_schema}}
-{{- $userSpec := "" }}
-{{- if is_service_principal}}
-  {{- $userSpec = printf "service_principal_name: %s" user_name}}
-{{- else}}
-   {{- $userSpec = printf "user_name: %s" user_name}}
-{{- end}}
     permissions:
       - {{ $userSpec }}
-        level: IS_OWNER
+        level: CAN_MANAGE
     run_as:
-      {{- if not is_service_principal}}
-      # This runs as {{user_name}} in production. We could also use a service principal here,
-      # see https://docs.databricks.com/dev-tools/bundles/permissions.html.
-      {{- end}}
       {{ $userSpec }}
