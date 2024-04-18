@@ -7,9 +7,7 @@ import (
 	"strings"
 
 	"github.com/databricks/cli/bundle"
-	"github.com/databricks/cli/bundle/config/resources"
 	"github.com/databricks/cli/libs/diag"
-	"github.com/databricks/cli/libs/log"
 )
 
 const CAN_MANAGE = "CAN_MANAGE"
@@ -65,29 +63,11 @@ func (m *applyResourcePermissions) Apply(ctx context.Context, b *bundle.Bundle) 
 		return diag.FromErr(err)
 	}
 
-	defaultOwner := ""
-	if b.Config.Experimental != nil && b.Config.Experimental.NewPermissionModel &&
-		b.Config.RunAs != nil && b.Config.RunAs.UserName != "" {
-		// If IS_OWNER property of individual resources is not set, we default it to the
-		// user specified in the run_as property.
-		//
-		// We prefer using the run_as identity over the deployment identity:
-		// - It provides consistency across deploys even if deploys are done by different identities.
-		// - It avoids errors when a user different than the run_as identity attempts to deploy.
-		//
-		// As an example, we for a bundle with run_as=Alice we set owner=Alice. This makes
-		// it possible for Bob and Charlie redeploy without getting an error that they can't
-		// change the owner to themselves. (To do so they would either explicitly need
-		// to change the owner, or they would need to change the run_as!)
-		log.Infof(ctx, "Setting default IS_OWNER permissions to user_name %s based on run_as property", b.Config.RunAs.UserName)
-		defaultOwner = b.Config.RunAs.UserName
-	}
-
-	applyForJobs(ctx, b, defaultOwner)
-	applyForPipelines(ctx, b, defaultOwner)
-	applyForMlModels(ctx, b, defaultOwner)
-	applyForMlExperiments(ctx, b, defaultOwner)
-	applyForModelServiceEndpoints(ctx, b, defaultOwner)
+	applyForJobs(ctx, b)
+	applyForPipelines(ctx, b)
+	applyForMlModels(ctx, b)
+	applyForMlExperiments(ctx, b)
+	applyForModelServiceEndpoints(ctx, b)
 
 	return nil
 }
@@ -102,80 +82,64 @@ func validate(b *bundle.Bundle) error {
 	return nil
 }
 
-func applyForJobs(ctx context.Context, b *bundle.Bundle, defaultOwner string) {
+func applyForJobs(ctx context.Context, b *bundle.Bundle) {
 	for key, job := range b.Config.Resources.Jobs {
-		job.Permissions = extendPermissions(job.Permissions, convert(
+		job.Permissions = append(job.Permissions, convert(
 			ctx,
 			b.Config.Permissions,
 			job.Permissions,
 			key,
 			levelsMap["jobs"],
-		), defaultOwner)
+		)...)
 	}
 }
 
-func applyForPipelines(ctx context.Context, b *bundle.Bundle, defaultOwner string) {
+func applyForPipelines(ctx context.Context, b *bundle.Bundle) {
 	for key, pipeline := range b.Config.Resources.Pipelines {
-		pipeline.Permissions = extendPermissions(pipeline.Permissions, convert(
+		pipeline.Permissions = append(pipeline.Permissions, convert(
 			ctx,
 			b.Config.Permissions,
 			pipeline.Permissions,
 			key,
 			levelsMap["pipelines"],
-		), defaultOwner)
+		)...)
 	}
 }
 
-func applyForMlExperiments(ctx context.Context, b *bundle.Bundle, defaultOwner string) {
+func applyForMlExperiments(ctx context.Context, b *bundle.Bundle) {
 	for key, experiment := range b.Config.Resources.Experiments {
-		experiment.Permissions = extendPermissions(experiment.Permissions, convert(
+		experiment.Permissions = append(experiment.Permissions, convert(
 			ctx,
 			b.Config.Permissions,
 			experiment.Permissions,
 			key,
 			levelsMap["mlflow_experiments"],
-		), defaultOwner)
+		)...)
 	}
 }
 
-func applyForMlModels(ctx context.Context, b *bundle.Bundle, defaultOwner string) {
+func applyForMlModels(ctx context.Context, b *bundle.Bundle) {
 	for key, model := range b.Config.Resources.Models {
-		model.Permissions = extendPermissions(model.Permissions, convert(
+		model.Permissions = append(model.Permissions, convert(
 			ctx,
 			b.Config.Permissions,
 			model.Permissions,
 			key,
 			levelsMap["mlflow_models"],
-		), defaultOwner)
+		)...)
 	}
 }
 
-func applyForModelServiceEndpoints(ctx context.Context, b *bundle.Bundle, defaultOwner string) {
+func applyForModelServiceEndpoints(ctx context.Context, b *bundle.Bundle) {
 	for key, model := range b.Config.Resources.ModelServingEndpoints {
-		model.Permissions = extendPermissions(model.Permissions, convert(
+		model.Permissions = append(model.Permissions, convert(
 			ctx,
 			b.Config.Permissions,
 			model.Permissions,
 			key,
 			levelsMap["model_serving_endpoints"],
-		), defaultOwner)
+		)...)
 	}
-}
-
-func extendPermissions(permissions []resources.Permission, newPermissions []resources.Permission, defaultOwner string) []resources.Permission {
-	if defaultOwner != "" {
-		alreadyHasOwner := false
-		for _, p := range permissions {
-			if p.Level == IS_OWNER {
-				alreadyHasOwner = true
-			}
-		}
-		if !alreadyHasOwner {
-			newPermissions = append(newPermissions, resources.Permission{Level: IS_OWNER, UserName: defaultOwner})
-		}
-	}
-
-	return append(permissions, newPermissions...)
 }
 
 func (m *applyResourcePermissions) Name() string {

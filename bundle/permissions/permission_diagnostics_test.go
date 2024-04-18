@@ -19,7 +19,7 @@ func TestApplySuccess(t *testing.T) {
 		{Level: "CAN_MANAGE", UserName: "testuser@databricks.com"},
 	})
 
-	diags := ReportPermissionErrors().Apply(context.Background(), b)
+	diags := PermissionDiagnostics().Apply(context.Background(), b)
 	require.NoError(t, diags.Error())
 }
 
@@ -28,7 +28,7 @@ func TestApplyFail(t *testing.T) {
 		{Level: "CAN_VIEW", UserName: "testuser@databricks.com"},
 	})
 
-	diags := ReportPermissionErrors().Apply(context.Background(), b)
+	diags := PermissionDiagnostics().Apply(context.Background(), b)
 	require.Equal(t, diags[0].Severity, diag.Warning)
 	require.Contains(t, diags[0].Summary, "testuser@databricks.com")
 }
@@ -39,7 +39,7 @@ func TestApplySuccesWithOwner(t *testing.T) {
 		{Level: "IS_OWNER", UserName: "testuser@databricks.com"},
 	})
 
-	diags := ReportPermissionErrors().Apply(context.Background(), b)
+	diags := PermissionDiagnostics().Apply(context.Background(), b)
 	require.Equal(t, diags[0].Severity, diag.Warning)
 	require.Contains(t, diags[0].Summary, "testuser@databricks.com")
 }
@@ -51,7 +51,7 @@ func TestApplyFailWithOwner(t *testing.T) {
 		{Level: "CAN_VIEW", UserName: "testuser@databricks.com"},
 	})
 
-	diags := ReportPermissionErrors().Apply(context.Background(), b)
+	diags := PermissionDiagnostics().Apply(context.Background(), b)
 	require.Equal(t, diags[0].Severity, diag.Warning)
 	require.Contains(t, diags[0].Summary, "testuser@databricks.com")
 }

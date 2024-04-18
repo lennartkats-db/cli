@@ -34,7 +34,7 @@ func Initialize() bundle.Mutator {
 				"workspace",
 				"variables",
 			),
-			permissions.ReportPermissionErrors(),
+			permissions.PermissionDiagnostics(),
 			permissions.ApplyResourcePermissions(),
 			mutator.SetRunAs(),
 			mutator.OverrideCompute(),

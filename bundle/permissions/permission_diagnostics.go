@@ -15,7 +15,7 @@ const CheckPermissionsFilename = "permissions.check"
 
 type reportPermissionErrors struct{}
 
-func ReportPermissionErrors() bundle.Mutator {
+func PermissionDiagnostics() bundle.Mutator {
 	return &reportPermissionErrors{}
 }
 
@@ -24,30 +24,22 @@ func (m *reportPermissionErrors) Name() string {
 }
 
 func (m *reportPermissionErrors) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
-	canManageBundle, _ := analyzeBundlePermissions(b)
-	if len(b.Config.Permissions) > 0 && !canManageBundle {
-		if b.Config.Experimental == nil || !b.Config.Experimental.NewPermissionModel {
-			// Just show a warning
-			return diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("permissions section should include %s or one of their groups with CAN_MANAGE permissions", b.Config.Workspace.CurrentUser.UserName),
-				Location: b.Config.GetLocation("permissions"),
-				ID:       diag.PermissionNotIncluded,
-			}}
-		}
-
-		// Show an error for this state. If the bundle has a permissions section,
-		// but it only lists other users, then we will likely get an error during deployment.
-		// Better fail fast and encourage the user to be explicit!
-		return diag.Diagnostics{{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("permissions section must include %s or one of their groups with CAN_MANAGE permissions", b.Config.Workspace.CurrentUser.UserName),
-			Location: b.Config.GetLocation("permissions"),
-			ID:       diag.PermissionNotIncluded,
-		}}
+	if len(b.Config.Permissions) == 0 {
+		// Only warn if there is an explicit top-level permissions section
+		return nil
 	}
 
-	return nil
+	canManageBundle, _ := analyzeBundlePermissions(b)
+	if !canManageBundle {
+		return nil
+	}
+
+	return diag.Diagnostics{{
+		Severity: diag.Warning,
+		Summary:  fmt.Sprintf("permissions section should include %s or one of their groups with CAN_MANAGE permissions", b.Config.Workspace.CurrentUser.UserName),
+		Location: b.Config.GetLocation("permissions"),
+		ID:       diag.PermissionNotIncluded,
+	}}
 }
 
 // analyzeBundlePermissions analyzes the top-level permissions of the bundle.
