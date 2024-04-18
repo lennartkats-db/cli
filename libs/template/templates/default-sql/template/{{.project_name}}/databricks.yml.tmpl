@@ -54,7 +54,7 @@ targets:
 {{- end}}
     permissions:
       - {{ $userSpec }}
-        level: CAN_MANAGE
+        level: IS_OWNER
     run_as:
       {{- if not is_service_principal}}
       # This runs as {{user_name}} in production. We could also use a service principal here,

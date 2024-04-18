@@ -125,7 +125,7 @@ func ReportPermissionDenied(ctx context.Context, b *bundle.Bundle, path string) 
 				"Please refer to https://docs.databricks.com/dev-tools/bundles/permissions.html for more on managing permissions.",
 				user, assistance),
 			Severity: diag.Error,
-			ID:       diag.PermissionNotIncluded,
+			ID:       diag.PathPermissionDenied,
 		}}
 	}
 
