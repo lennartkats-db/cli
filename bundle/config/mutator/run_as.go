@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/databricks/cli/bundle"
-	"github.com/databricks/cli/bundle/config/resources"
 	"github.com/databricks/cli/libs/diag"
 	"github.com/databricks/cli/libs/dyn"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
@@ -85,30 +84,6 @@ func validateRunAs(b *bundle.Bundle) diag.Diagnostics {
 		)
 	}
 
-	return nil
-}
-
-func checkValidOwnerForUnsupportedType(b *bundle.Bundle, runas *jobs.JobRunAs, resourceType string, resourceId string, permissions []resources.Permission) diag.Diagnostics {
-	for _, p := range permissions {
-		if p.Level == "IS_OWNER" {
-			if p.UserName == runas.UserName {
-				return nil
-			}
-			if p.ServicePrincipalName == runas.ServicePrincipalName {
-				return nil
-			}
-			return diag.Diagnostics{{
-				Summary: fmt.Sprintf(
-					"%s do not support a setting a run_as user that is different from the owner.\n"+
-						"See https://docs.databricks.com/dev-tools/bundles/run-as.html to learn more about the run_as property.",
-					resourceType,
-				),
-				Location: b.Config.GetLocation(fmt.Sprintf("resources.%s.%s", resourceType, resourceId)),
-				Severity: diag.Error,
-				ID:       diag.RunAsDenied,
-			}}
-		}
-	}
 	return nil
 }
 
