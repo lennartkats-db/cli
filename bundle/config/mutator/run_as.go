@@ -7,6 +7,7 @@ import (
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/config/resources"
 	"github.com/databricks/cli/libs/diag"
+	"github.com/databricks/cli/libs/dyn"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 )
 
@@ -26,6 +27,15 @@ func SetRunAs() bundle.Mutator {
 
 func (m *setRunAs) Name() string {
 	return "SetRunAs"
+}
+
+func reportRunAsNotSupported(resourceType string, location dyn.Location, currentUser string, runAsUser string) diag.Diagnostics {
+	return diag.Diagnostics{{
+		Summary: fmt.Sprintf("%s do not support a setting a run_as user that is different from the owner.\n"+
+			"Current identity: %s. Run as identity: %s.\n"+
+			"See https://docs.databricks.com/dev-tools/bundles/run-as.html to learn more about the run_as property.", resourceType, currentUser, runAsUser),
+		Location: location,
+	}}
 }
 
 func validateRunAs(b *bundle.Bundle) diag.Diagnostics {
@@ -55,14 +65,24 @@ func validateRunAs(b *bundle.Bundle) diag.Diagnostics {
 		return nil
 	}
 
-	// DLT pipelines do not support run_as in the API, so they require owner==run_as
-	for _, p := range b.Config.Resources.Pipelines {
-		checkValidOwnerForUnsupportedType(b, runAs, "pipelines", p.ID, p.Permissions)
+	// DLT pipelines do not support run_as in the API.
+	if len(b.Config.Resources.Pipelines) > 0 {
+		return reportRunAsNotSupported(
+			"pipelines",
+			b.Config.GetLocation("resources.pipelines"),
+			b.Config.Workspace.CurrentUser.UserName,
+			identity,
+		)
 	}
 
-	// Model serving endpoints do not support run_as in the API, so they require owner==run_as
-	for _, p := range b.Config.Resources.ModelServingEndpoints {
-		checkValidOwnerForUnsupportedType(b, runAs, "model_serving_endpoints", p.ID, p.Permissions)
+	// Model serving endpoints do not support run_as in the API.
+	if len(b.Config.Resources.ModelServingEndpoints) > 0 {
+		return reportRunAsNotSupported(
+			"model_serving_endpoints",
+			b.Config.GetLocation("resources.model_serving_endpoints"),
+			b.Config.Workspace.CurrentUser.UserName,
+			identity,
+		)
 	}
 
 	return nil

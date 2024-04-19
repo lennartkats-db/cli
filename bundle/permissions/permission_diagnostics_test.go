@@ -34,26 +34,12 @@ func TestApplyFail(t *testing.T) {
 }
 
 func TestApplySuccesWithOwner(t *testing.T) {
-	// "IS_OWNER" might be inserted by run_as, but should be ignored
 	b := mockBundle([]resources.Permission{
 		{Level: "IS_OWNER", UserName: "testuser@databricks.com"},
 	})
 
 	diags := PermissionDiagnostics().Apply(context.Background(), b)
-	require.Equal(t, diags[0].Severity, diag.Warning)
-	require.Contains(t, diags[0].Summary, "testuser@databricks.com")
-}
-
-func TestApplyFailWithOwner(t *testing.T) {
-	// "IS_OWNER" might be inserted by run_as, but should be ignored
-	b := mockBundle([]resources.Permission{
-		{Level: "IS_OWNER", UserName: "testuser@databricks.com"},
-		{Level: "CAN_VIEW", UserName: "testuser@databricks.com"},
-	})
-
-	diags := PermissionDiagnostics().Apply(context.Background(), b)
-	require.Equal(t, diags[0].Severity, diag.Warning)
-	require.Contains(t, diags[0].Summary, "testuser@databricks.com")
+	require.Equal(t, len(diags), 0)
 }
 
 func TestPermissionDeniedWithPermission(t *testing.T) {
@@ -71,14 +57,14 @@ func TestPermissionDeniedWithoutPermission(t *testing.T) {
 	})
 
 	diags := ReportPermissionDenied(context.Background(), b, "testpath")
-	require.Equal(t, diags.Error(), string(diag.PermissionNotIncluded))
+	require.ErrorContains(t, diags.Error(), string(diag.PathPermissionDenied))
 }
 
 func TestPermissionDeniedNilPermission(t *testing.T) {
 	b := mockBundle(nil)
 
 	diags := ReportPermissionDenied(context.Background(), b, "testpath")
-	require.ErrorContains(t, diags.Error(), "necessary permissions to deploy")
+	require.ErrorContains(t, diags.Error(), string(diag.PathPermissionDenied))
 }
 
 func TestFindOtherOwners(t *testing.T) {

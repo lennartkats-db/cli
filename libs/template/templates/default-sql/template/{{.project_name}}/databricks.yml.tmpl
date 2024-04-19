@@ -9,12 +9,6 @@ bundle:
   {{- $dev_schema = "${workspace.current_user.short_name}"}}
   {{- $prod_schema = "default"}}
 {{- end}}
-{{- $userSpec := "" }}
-{{- if is_service_principal}}
-  {{- $userSpec = printf "service_principal_name: %s" user_name}}
-{{- else}}
-   {{- $userSpec = printf "user_name: %s" user_name}}
-{{- end}}
 
 include:
   - resources/*.yml
@@ -53,7 +47,7 @@ targets:
       catalog: {{.default_catalog}}
       schema: {{$prod_schema}}
     permissions:
-      - {{ $userSpec }}
-        level: CAN_MANAGE
+      - {{if is_service_principal}}service_principal{{else}}user{{end}}_name: {{user_name}}
+        level: IS_OWNER
     run_as:
-      {{ $userSpec }}
+      {{if is_service_principal}}service_principal{{else}}user{{end}}_name: {{user_name}}
