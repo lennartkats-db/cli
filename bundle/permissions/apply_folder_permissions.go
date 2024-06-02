@@ -48,7 +48,7 @@ func giveAccessForWorkspaceRoot(ctx context.Context, b *bundle.Bundle) error {
 	}
 
 	if len(permissions) == 0 {
-		return nil
+		return checkSpuriousPermissions(b, permissions)
 	}
 
 	w := b.WorkspaceClient().Workspace
@@ -57,12 +57,20 @@ func giveAccessForWorkspaceRoot(ctx context.Context, b *bundle.Bundle) error {
 		return err
 	}
 
-	_, err = w.UpdatePermissions(ctx, workspace.WorkspaceObjectPermissionsRequest{
+	_, err = w.SetPermissions(ctx, workspace.WorkspaceObjectPermissionsRequest{
 		WorkspaceObjectId:   fmt.Sprint(obj.ObjectId),
 		WorkspaceObjectType: "directories",
 		AccessControlList:   permissions,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	return checkSpuriousPermissions(b, permissions)
+}
+
+func checkSpuriousPermissions(b *bundle.Bundle, expected []workspace.WorkspaceObjectAccessControlRequest) error {
+
 }
 
 func getWorkspaceObjectPermissionLevel(bundlePermission string) (workspace.WorkspaceObjectPermissionLevel, error) {
