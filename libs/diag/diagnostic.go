@@ -30,6 +30,8 @@ type Diagnostic struct {
 }
 
 // Errorf creates a new error diagnostic.
+//
+// Example: diag.Error(diag.IOError)("can't read file 'x'")
 func Errorf(id ID) func(format string, args ...any) Diagnostics {
 	return func(format string, args ...any) Diagnostics {
 		return []Diagnostic{
@@ -57,6 +59,8 @@ func FromErr(id ID, err error) Diagnostics {
 }
 
 // Warningf creates a new warning diagnostic.
+//
+// Example: diag.Warningf(diag.ConfigurationWarning)("missing field 'x'")
 func Warningf(id ID) func(format string, args ...any) Diagnostics {
 	return func(format string, args ...any) Diagnostics {
 		return []Diagnostic{
@@ -70,6 +74,8 @@ func Warningf(id ID) func(format string, args ...any) Diagnostics {
 }
 
 // Infof creates a new info diagnostic.
+//
+// Example: diag.InfoF(diag.ConfigurationInfo)("use field 'x' here for more 'x'")
 func Infof(id ID) func(format string, args ...any) Diagnostics {
 	return func(format string, args ...any) Diagnostics {
 		return []Diagnostic{
