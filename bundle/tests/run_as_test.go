@@ -204,19 +204,19 @@ func TestRunAsErrorNeitherUserOrSpSpecified(t *testing.T) {
 	}{
 		{
 			name: "empty_run_as",
-			err:  "run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
+			err:  "ERUNAS: run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
 		},
 		{
 			name: "empty_sp",
-			err:  "run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
+			err:  "ERUNAS: run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
 		},
 		{
 			name: "empty_user",
-			err:  "run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
+			err:  "ERUNAS: run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
 		},
 		{
 			name: "empty_user_and_sp",
-			err:  "run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
+			err:  "ERUNAS: run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
 		},
 	}
 
@@ -259,7 +259,7 @@ func TestRunAsErrorNeitherUserOrSpSpecifiedAtTargetOverride(t *testing.T) {
 	diags := bundle.Apply(ctx, b, mutator.SetRunAs())
 	err := diags.Error()
 
-	assert.EqualError(t, err, "run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified")
+	assert.EqualError(t, err, "ERUNAS: run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified")
 }
 
 func TestLegacyRunAs(t *testing.T) {

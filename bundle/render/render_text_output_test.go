@@ -47,7 +47,7 @@ func TestRenderTextOutput(t *testing.T) {
 			name:   "bundle during 'load' and 1 error",
 			bundle: loadingBundle,
 			diags:  diag.Errorf(diag.IOError)("failed to load bundle"),
-			expected: "Error: IOERROR: failed to load bundle\n" +
+			expected: "Error: EIO: failed to load bundle\n" +
 				"\n" +
 				"Name: test-bundle\n" +
 				"Target: test-target\n" +
@@ -171,7 +171,7 @@ func TestRenderTextOutput(t *testing.T) {
 			err := RenderTextOutput(writer, tc.bundle, tc.diags)
 			require.NoError(t, err)
 
-			assert.Equal(t, tc.expected, writer.String())
+			require.Equal(t, tc.expected, writer.String())
 		})
 	}
 }

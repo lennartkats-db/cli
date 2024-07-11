@@ -25,12 +25,12 @@ func TestVerifyCliVersion(t *testing.T) {
 		{
 			currentVersion: "0.0.1",
 			constraint:     "0.100.0",
-			expectedError:  "Databricks CLI version constraint not satisfied. Required: 0.100.0, current: 0.0.1",
+			expectedError:  "ECLIVER: Databricks CLI version constraint not satisfied. Required: 0.100.0, current: 0.0.1",
 		},
 		{
 			currentVersion: "0.0.1",
 			constraint:     ">= 0.100.0",
-			expectedError:  "Databricks CLI version constraint not satisfied. Required: >= 0.100.0, current: 0.0.1",
+			expectedError:  "ECLIVER: Databricks CLI version constraint not satisfied. Required: >= 0.100.0, current: 0.0.1",
 		},
 		{
 			currentVersion: "0.100.0",
@@ -39,7 +39,7 @@ func TestVerifyCliVersion(t *testing.T) {
 		{
 			currentVersion: "0.100.1",
 			constraint:     "0.100.0",
-			expectedError:  "Databricks CLI version constraint not satisfied. Required: 0.100.0, current: 0.100.1",
+			expectedError:  "ECLIVER: Databricks CLI version constraint not satisfied. Required: 0.100.0, current: 0.100.1",
 		},
 		{
 			currentVersion: "0.100.1",
@@ -56,12 +56,12 @@ func TestVerifyCliVersion(t *testing.T) {
 		{
 			currentVersion: "1.0.0",
 			constraint:     "<= 0.100.0",
-			expectedError:  "Databricks CLI version constraint not satisfied. Required: <= 0.100.0, current: 1.0.0",
+			expectedError:  "ECLIVER: Databricks CLI version constraint not satisfied. Required: <= 0.100.0, current: 1.0.0",
 		},
 		{
 			currentVersion: "0.99.0",
 			constraint:     ">= 0.100.0, <= 0.100.2",
-			expectedError:  "Databricks CLI version constraint not satisfied. Required: >= 0.100.0, <= 0.100.2, current: 0.99.0",
+			expectedError:  "ECLIVER: Databricks CLI version constraint not satisfied. Required: >= 0.100.0, <= 0.100.2, current: 0.99.0",
 		},
 		{
 			currentVersion: "0.100.0",
@@ -78,12 +78,12 @@ func TestVerifyCliVersion(t *testing.T) {
 		{
 			currentVersion: "0.101.0",
 			constraint:     ">= 0.100.0, <= 0.100.2",
-			expectedError:  "Databricks CLI version constraint not satisfied. Required: >= 0.100.0, <= 0.100.2, current: 0.101.0",
+			expectedError:  "ECLIVER: Databricks CLI version constraint not satisfied. Required: >= 0.100.0, <= 0.100.2, current: 0.101.0",
 		},
 		{
 			currentVersion: "0.100.0-beta",
 			constraint:     ">= 0.100.0, <= 0.100.2",
-			expectedError:  "Databricks CLI version constraint not satisfied. Required: >= 0.100.0, <= 0.100.2, current: 0.100.0-beta",
+			expectedError:  "ECLIVER: Databricks CLI version constraint not satisfied. Required: >= 0.100.0, <= 0.100.2, current: 0.100.0-beta",
 		},
 		{
 			currentVersion: "0.100.0-beta",
@@ -96,7 +96,7 @@ func TestVerifyCliVersion(t *testing.T) {
 		{
 			currentVersion: "0.100.3-beta",
 			constraint:     ">= 0.100.0, <= 0.100.2",
-			expectedError:  "Databricks CLI version constraint not satisfied. Required: >= 0.100.0, <= 0.100.2, current: 0.100.3-beta",
+			expectedError:  "ECLIVER: Databricks CLI version constraint not satisfied. Required: >= 0.100.0, <= 0.100.2, current: 0.100.3-beta",
 		},
 		{
 			currentVersion: "0.100.123",
@@ -105,7 +105,7 @@ func TestVerifyCliVersion(t *testing.T) {
 		{
 			currentVersion: "0.100.123",
 			constraint:     "^0.100",
-			expectedError:  "invalid version constraint \"^0.100\" specified. Please specify the version constraint in the format (>=) 0.0.0(, <= 1.0.0)",
+			expectedError:  "ECONFIG: invalid version constraint \"^0.100\" specified. Please specify the version constraint in the format (>=) 0.0.0(, <= 1.0.0)",
 		},
 	}
 

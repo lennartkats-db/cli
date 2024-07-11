@@ -41,7 +41,7 @@ func TestValidateGitDetailsNonMatchingBranches(t *testing.T) {
 	m := ValidateGitDetails()
 	diags := bundle.Apply(context.Background(), b, m)
 
-	expectedError := "not on the right Git branch:\n  expected according to configuration: main\n  actual: feature\nuse --force to override"
+	expectedError := "EGIT: not on the right Git branch:\n  expected according to configuration: main\n  actual: feature\nuse --force to override"
 	assert.EqualError(t, diags.Error(), expectedError)
 }
 

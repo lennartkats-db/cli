@@ -146,7 +146,7 @@ func TestPythonMutator_load_disallowed(t *testing.T) {
 	mutator := PythonMutator(PythonMutatorPhaseLoad)
 	diag := bundle.Apply(ctx, b, mutator)
 
-	assert.EqualError(t, diag.Error(), "unexpected change at \"resources.jobs.job0.description\" (insert)")
+	assert.EqualError(t, diag.Error(), "EPYDABS: unexpected change at \"resources.jobs.job0.description\" (insert)")
 }
 
 func TestPythonMutator_init(t *testing.T) {
@@ -252,7 +252,7 @@ func TestPythonMutator_badOutput(t *testing.T) {
 	mutator := PythonMutator(PythonMutatorPhaseLoad)
 	diag := bundle.Apply(ctx, b, mutator)
 
-	assert.EqualError(t, diag.Error(), "failed to load Python mutator output: failed to normalize output: unknown field: unknown_property")
+	assert.EqualError(t, diag.Error(), "EPYDABS: failed to load Python mutator output: failed to normalize output: unknown field: unknown_property")
 }
 
 func TestPythonMutator_disabled(t *testing.T) {
@@ -279,7 +279,7 @@ func TestPythonMutator_venvRequired(t *testing.T) {
 }
 
 func TestPythonMutator_venvNotFound(t *testing.T) {
-	expectedError := fmt.Sprintf("can't find %q, check if venv is created", interpreterPath("bad_path"))
+	expectedError := fmt.Sprintf("EPYDABS: can't find %q, check if venv is created", interpreterPath("bad_path"))
 
 	b := loadYaml("databricks.yml", `
       experimental:

@@ -430,7 +430,7 @@ func TestJobNotebookDoesNotExistError(t *testing.T) {
 	bundletest.SetLocation(b, ".", filepath.Join(dir, "fake.yml"))
 
 	diags := bundle.Apply(context.Background(), b, mutator.TranslatePaths())
-	assert.EqualError(t, diags.Error(), "notebook ./doesnt_exist.py not found")
+	assert.EqualError(t, diags.Error(), "EARTIFACT: notebook ./doesnt_exist.py not found")
 }
 
 func TestJobFileDoesNotExistError(t *testing.T) {
@@ -461,7 +461,7 @@ func TestJobFileDoesNotExistError(t *testing.T) {
 	bundletest.SetLocation(b, ".", filepath.Join(dir, "fake.yml"))
 
 	diags := bundle.Apply(context.Background(), b, mutator.TranslatePaths())
-	assert.EqualError(t, diags.Error(), "file ./doesnt_exist.py not found")
+	assert.EqualError(t, diags.Error(), "EARTIFACT: file ./doesnt_exist.py not found")
 }
 
 func TestPipelineNotebookDoesNotExistError(t *testing.T) {
@@ -492,7 +492,7 @@ func TestPipelineNotebookDoesNotExistError(t *testing.T) {
 	bundletest.SetLocation(b, ".", filepath.Join(dir, "fake.yml"))
 
 	diags := bundle.Apply(context.Background(), b, mutator.TranslatePaths())
-	assert.EqualError(t, diags.Error(), "notebook ./doesnt_exist.py not found")
+	assert.EqualError(t, diags.Error(), "EARTIFACT: notebook ./doesnt_exist.py not found")
 }
 
 func TestPipelineFileDoesNotExistError(t *testing.T) {
@@ -523,7 +523,7 @@ func TestPipelineFileDoesNotExistError(t *testing.T) {
 	bundletest.SetLocation(b, ".", filepath.Join(dir, "fake.yml"))
 
 	diags := bundle.Apply(context.Background(), b, mutator.TranslatePaths())
-	assert.EqualError(t, diags.Error(), "file ./doesnt_exist.py not found")
+	assert.EqualError(t, diags.Error(), "EARTIFACT: file ./doesnt_exist.py not found")
 }
 
 func TestJobSparkPythonTaskWithNotebookSourceError(t *testing.T) {
@@ -558,7 +558,7 @@ func TestJobSparkPythonTaskWithNotebookSourceError(t *testing.T) {
 	bundletest.SetLocation(b, ".", filepath.Join(dir, "resource.yml"))
 
 	diags := bundle.Apply(context.Background(), b, mutator.TranslatePaths())
-	assert.ErrorContains(t, diags.Error(), `expected a file for "resources.jobs.job.tasks[0].spark_python_task.python_file" but got a notebook`)
+	assert.ErrorContains(t, diags.Error(), `EARTIFACT: expected a file for "resources.jobs.job.tasks[0].spark_python_task.python_file" but got a notebook`)
 }
 
 func TestJobNotebookTaskWithFileSourceError(t *testing.T) {
@@ -593,7 +593,7 @@ func TestJobNotebookTaskWithFileSourceError(t *testing.T) {
 	bundletest.SetLocation(b, ".", filepath.Join(dir, "resource.yml"))
 
 	diags := bundle.Apply(context.Background(), b, mutator.TranslatePaths())
-	assert.ErrorContains(t, diags.Error(), `expected a notebook for "resources.jobs.job.tasks[0].notebook_task.notebook_path" but got a file`)
+	assert.ErrorContains(t, diags.Error(), `EARTIFACT: expected a notebook for "resources.jobs.job.tasks[0].notebook_task.notebook_path" but got a file`)
 }
 
 func TestPipelineNotebookLibraryWithFileSourceError(t *testing.T) {
@@ -628,7 +628,7 @@ func TestPipelineNotebookLibraryWithFileSourceError(t *testing.T) {
 	bundletest.SetLocation(b, ".", filepath.Join(dir, "resource.yml"))
 
 	diags := bundle.Apply(context.Background(), b, mutator.TranslatePaths())
-	assert.ErrorContains(t, diags.Error(), `expected a notebook for "resources.pipelines.pipeline.libraries[0].notebook.path" but got a file`)
+	assert.ErrorContains(t, diags.Error(), `EARTIFACT: expected a notebook for "resources.pipelines.pipeline.libraries[0].notebook.path" but got a file`)
 }
 
 func TestPipelineFileLibraryWithNotebookSourceError(t *testing.T) {
@@ -663,7 +663,7 @@ func TestPipelineFileLibraryWithNotebookSourceError(t *testing.T) {
 	bundletest.SetLocation(b, ".", filepath.Join(dir, "resource.yml"))
 
 	diags := bundle.Apply(context.Background(), b, mutator.TranslatePaths())
-	assert.ErrorContains(t, diags.Error(), `expected a file for "resources.pipelines.pipeline.libraries[0].file.path" but got a notebook`)
+	assert.ErrorContains(t, diags.Error(), `EARTIFACT: expected a file for "resources.pipelines.pipeline.libraries[0].file.path" but got a notebook`)
 }
 
 func TestTranslatePathJobEnvironments(t *testing.T) {
