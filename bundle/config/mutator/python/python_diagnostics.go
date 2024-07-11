@@ -61,6 +61,7 @@ func parsePythonDiagnostics(input io.Reader) (diag.Diagnostics, error) {
 			Detail:   parsedLine.Detail,
 			Location: convertPythonLocation(parsedLine.Location),
 			Path:     path,
+			ID:       diag.PyDABsMutatorError,
 		}
 
 		diags = diags.Append(diag)

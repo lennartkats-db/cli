@@ -37,6 +37,7 @@ func reportRunAsNotSupported(resourceType string, location dyn.Location, current
 			"See https://docs.databricks.com/dev-tools/bundles/run-as.html to learn more about the run_as property.", resourceType, currentUser, runAsUser),
 		Location: location,
 		Severity: diag.Error,
+		ID:       diag.RunAsError,
 	}}
 }
 
@@ -47,6 +48,7 @@ func validateRunAs(b *bundle.Bundle) diag.Diagnostics {
 		Summary:  "run_as section must specify exactly one identity. Neither service_principal_name nor user_name is specified",
 		Location: b.Config.GetLocation("run_as"),
 		Severity: diag.Error,
+		ID:       diag.RunAsError,
 	}}
 
 	// Fail fast if neither service_principal_name nor user_name are specified, but the
@@ -67,6 +69,7 @@ func validateRunAs(b *bundle.Bundle) diag.Diagnostics {
 			Summary:  "run_as section cannot specify both user_name and service_principal_name",
 			Location: b.Config.GetLocation("run_as"),
 			Severity: diag.Error,
+			ID:       diag.RunAsError,
 		}})
 	}
 
@@ -176,6 +179,7 @@ func (m *setRunAs) Apply(_ context.Context, b *bundle.Bundle) diag.Diagnostics {
 				Summary:  "You are using the legacy mode of run_as. The support for this mode is experimental and might be removed in a future release of the CLI. In order to run the DLT pipelines in your DAB as the run_as user this mode changes the owners of the pipelines to the run_as identity, which requires the user deploying the bundle to be a workspace admin, and also a Metastore admin if the pipeline target is in UC.",
 				Path:     dyn.MustPathFromString("experimental.use_legacy_run_as"),
 				Location: b.Config.GetLocation("experimental.use_legacy_run_as"),
+				ID:       diag.RunAsLegacyWarning,
 			},
 		}
 	}

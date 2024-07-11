@@ -42,6 +42,6 @@ func TryExtendTerraformPermissionError(ctx context.Context, b *bundle.Bundle, er
 			"Please refer to https://docs.databricks.com/dev-tools/bundles/permissions.html for more on managing permissions.",
 			resource, assistance),
 		Severity: diag.Error,
-		ID:       diag.ResourcePermissionDenied,
+		ID:       diag.ResourcePermissionDeniedError,
 	}}
 }

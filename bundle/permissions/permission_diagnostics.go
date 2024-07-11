@@ -37,7 +37,7 @@ func (m *reportPermissionErrors) Apply(ctx context.Context, b *bundle.Bundle) di
 		Severity: diag.Warning,
 		Summary:  fmt.Sprintf("permissions section should include %s or one of their groups with CAN_MANAGE permissions", b.Config.Workspace.CurrentUser.UserName),
 		Location: b.Config.GetLocation("permissions"),
-		ID:       diag.PermissionNotIncluded,
+		ID:       diag.PermissionNotIncludedWarning,
 	}}
 }
 
@@ -124,7 +124,7 @@ func ReportPermissionDenied(ctx context.Context, b *bundle.Bundle, path string) 
 				"Please refer to https://docs.databricks.com/dev-tools/bundles/permissions.html for more on managing permissions.",
 				user, assistance),
 			Severity: diag.Error,
-			ID:       diag.PathPermissionDenied,
+			ID:       diag.PathPermissionDeniedError,
 		}}
 	}
 
@@ -138,6 +138,6 @@ func ReportPermissionDenied(ctx context.Context, b *bundle.Bundle, path string) 
 			"Please refer to https://docs.databricks.com/dev-tools/bundles/permissions.html for more on managing permissions.",
 			user, assistance),
 		Severity: diag.Error,
-		ID:       diag.CannotChangePathPermissions,
+		ID:       diag.CannotChangePathPermissionsError,
 	}}
 }

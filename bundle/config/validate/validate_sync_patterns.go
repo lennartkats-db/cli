@@ -68,6 +68,7 @@ func checkPatterns(patterns []string, path string, rb bundle.ReadOnlyBundle) (di
 					Summary:  fmt.Sprintf("Pattern %s does not match any files", p),
 					Location: loc.Location(),
 					Path:     loc.Path(),
+					ID:       diag.ConfigurationWarning,
 				})
 				mu.Unlock()
 			}

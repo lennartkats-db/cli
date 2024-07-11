@@ -24,7 +24,7 @@ Error: cannot update permissions: ...
 	with databricks_pipeline.my_project_pipeline,
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
-	require.ErrorContains(t, err, string(diag.ResourcePermissionDenied))
+	require.ErrorContains(t, err, string(diag.ResourcePermissionDeniedError))
 }
 
 func TestTryExtendTerraformPermissionError2(t *testing.T) {
@@ -39,7 +39,7 @@ Error: cannot read pipeline: User xyz does not have View permissions on pipeline
 	with databricks_pipeline.my_project_pipeline,
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
-	require.ErrorContains(t, err, string(diag.ResourcePermissionDenied))
+	require.ErrorContains(t, err, string(diag.ResourcePermissionDeniedError))
 }
 
 func TestTryExtendTerraformPermissionError3(t *testing.T) {
@@ -54,7 +54,7 @@ func TestTryExtendTerraformPermissionError3(t *testing.T) {
 	with databricks_pipeline.my_project_pipeline,
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
-	require.ErrorContains(t, err, string(diag.ResourcePermissionDenied))
+	require.ErrorContains(t, err, string(diag.ResourcePermissionDeniedError))
 }
 
 func TestTryExtendTerraformPermissionErrorNotOwner(t *testing.T) {
@@ -72,5 +72,5 @@ Error: cannot read pipeline: User xyz does not have View permissions on pipeline
 	with databricks_pipeline.my_project_pipeline,
 	on bundle.tf.json line 39, in resource.databricks_pipeline.my_project_pipeline:
 	39:       }`)).Error()
-	require.ErrorContains(t, err, string(diag.ResourcePermissionDenied))
+	require.ErrorContains(t, err, string(diag.ResourcePermissionDeniedError))
 }

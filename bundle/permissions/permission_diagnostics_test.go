@@ -47,7 +47,7 @@ func TestPermissionDiagnosticsPermissionDeniedWithPermission(t *testing.T) {
 	})
 
 	diags := permissions.ReportPermissionDenied(context.Background(), b, "testpath")
-	require.ErrorContains(t, diags.Error(), string(diag.CannotChangePathPermissions))
+	require.ErrorContains(t, diags.Error(), string(diag.CannotChangePathPermissionsError))
 }
 
 func TestPermissionDiagnosticsPermissionDeniedWithoutPermission(t *testing.T) {
@@ -56,14 +56,14 @@ func TestPermissionDiagnosticsPermissionDeniedWithoutPermission(t *testing.T) {
 	})
 
 	diags := permissions.ReportPermissionDenied(context.Background(), b, "testpath")
-	require.ErrorContains(t, diags.Error(), string(diag.PathPermissionDenied))
+	require.ErrorContains(t, diags.Error(), string(diag.PathPermissionDeniedError))
 }
 
 func TestPermissionDiagnosticsPermissionDeniedNilPermission(t *testing.T) {
 	b := mockBundle(nil)
 
 	diags := permissions.ReportPermissionDenied(context.Background(), b, "testpath")
-	require.ErrorContains(t, diags.Error(), string(diag.PathPermissionDenied))
+	require.ErrorContains(t, diags.Error(), string(diag.PathPermissionDeniedError))
 }
 
 func TestPermissionDiagnosticsFindOtherOwners(t *testing.T) {

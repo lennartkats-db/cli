@@ -43,6 +43,7 @@ func (v *jobClusterKeyDefined) Apply(ctx context.Context, rb bundle.ReadOnlyBund
 						Summary:  fmt.Sprintf("job_cluster_key %s is not defined", task.JobClusterKey),
 						Location: loc.Location(),
 						Path:     loc.Path(),
+						ID:       diag.ConfigurationWarning,
 					})
 				}
 			}

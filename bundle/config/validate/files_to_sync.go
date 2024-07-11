@@ -39,6 +39,7 @@ func (v *filesToSync) Apply(ctx context.Context, rb bundle.ReadOnlyBundle) diag.
 		diags = diags.Append(diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "There are no files to sync, please check your .gitignore",
+			ID:       diag.ConfigurationWarning,
 		})
 	} else {
 		loc := location{path: "sync.exclude", rb: rb}
@@ -47,6 +48,7 @@ func (v *filesToSync) Apply(ctx context.Context, rb bundle.ReadOnlyBundle) diag.
 			Summary:  "There are no files to sync, please check your .gitignore and sync.exclude configuration",
 			Location: loc.Location(),
 			Path:     loc.Path(),
+			ID:       diag.ConfigurationWarning,
 		})
 	}
 
