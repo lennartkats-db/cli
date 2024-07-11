@@ -45,7 +45,7 @@ func (m *infer) Name() string {
 func (m *infer) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	artifact, ok := b.Config.Artifacts[m.name]
 	if !ok {
-		return diag.Errorf("artifact doesn't exist: %s", m.name)
+		return diag.Errorf(diag.ArtifactError)("artifact doesn't exist: %s", m.name)
 	}
 
 	// only try to infer command if it's not already defined

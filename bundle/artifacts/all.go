@@ -32,7 +32,7 @@ func (m *all) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	for _, name := range keys {
 		m, err := m.fn(name)
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(diag.ArtifactError, err)
 		}
 		if m != nil {
 			out = append(out, m)

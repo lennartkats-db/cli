@@ -30,17 +30,20 @@ type Diagnostic struct {
 }
 
 // Errorf creates a new error diagnostic.
-func Errorf(format string, args ...any) Diagnostics {
-	return []Diagnostic{
-		{
-			Severity: Error,
-			Summary:  fmt.Sprintf(format, args...),
-		},
+func Errorf(id ID) func(format string, args ...any) Diagnostics {
+	return func(format string, args ...any) Diagnostics {
+		return []Diagnostic{
+			{
+				Severity: Error,
+				Summary:  fmt.Sprintf(format, args...),
+				ID:       id,
+			},
+		}
 	}
 }
 
 // FromErr returns a new error diagnostic from the specified error, if any.
-func FromErr(err error) Diagnostics {
+func FromErr(id ID, err error) Diagnostics {
 	if err == nil {
 		return nil
 	}
@@ -48,27 +51,34 @@ func FromErr(err error) Diagnostics {
 		{
 			Severity: Error,
 			Summary:  err.Error(),
+			ID:       id,
 		},
 	}
 }
 
 // Warningf creates a new warning diagnostic.
-func Warningf(format string, args ...any) Diagnostics {
-	return []Diagnostic{
-		{
-			Severity: Warning,
-			Summary:  fmt.Sprintf(format, args...),
-		},
+func Warningf(id ID) func(format string, args ...any) Diagnostics {
+	return func(format string, args ...any) Diagnostics {
+		return []Diagnostic{
+			{
+				Severity: Warning,
+				Summary:  fmt.Sprintf(format, args...),
+				ID:       id,
+			},
+		}
 	}
 }
 
 // Infof creates a new info diagnostic.
-func Infof(format string, args ...any) Diagnostics {
-	return []Diagnostic{
-		{
-			Severity: Info,
-			Summary:  fmt.Sprintf(format, args...),
-		},
+func Infof(id ID) func(format string, args ...any) Diagnostics {
+	return func(format string, args ...any) Diagnostics {
+		return []Diagnostic{
+			{
+				Severity: Info,
+				Summary:  fmt.Sprintf(format, args...),
+				ID:       id,
+			},
+		}
 	}
 }
 

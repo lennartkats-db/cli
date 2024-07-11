@@ -33,7 +33,7 @@ func (m *processInclude) Apply(_ context.Context, b *bundle.Bundle) diag.Diagnos
 	}
 	err := b.Config.Merge(this)
 	if err != nil {
-		diags = diags.Extend(diag.FromErr(err))
+		diags = diags.Extend(diag.FromErr(diag.ConfigurationError, err))
 	}
 	return diags
 }

@@ -24,12 +24,12 @@ func (m *expandWorkspaceRoot) Name() string {
 func (m *expandWorkspaceRoot) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	root := b.Config.Workspace.RootPath
 	if root == "" {
-		return diag.Errorf("unable to expand workspace root: workspace root not defined")
+		return diag.Errorf(diag.ConfigurationError)("unable to expand workspace root: workspace root not defined")
 	}
 
 	currentUser := b.Config.Workspace.CurrentUser
 	if currentUser == nil || currentUser.UserName == "" {
-		return diag.Errorf("unable to expand workspace root: current user not set")
+		return diag.Errorf(diag.ConfigurationError)("unable to expand workspace root: current user not set")
 	}
 
 	if strings.HasPrefix(root, "~/") {

@@ -51,7 +51,7 @@ func ApplyBundlePermissions() bundle.Mutator {
 func (m *bundlePermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	err := validate(b)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ConfigurationError, err)
 	}
 
 	applyForJobs(ctx, b)

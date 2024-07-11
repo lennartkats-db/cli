@@ -17,17 +17,17 @@ type unbind struct {
 func (m *unbind) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	tf := b.Terraform
 	if tf == nil {
-		return diag.Errorf("terraform not initialized")
+		return diag.Errorf(diag.InternalError)("terraform not initialized")
 	}
 
 	err := tf.Init(ctx, tfexec.Upgrade(true))
 	if err != nil {
-		return diag.Errorf("terraform init: %v", err)
+		return diag.Errorf(diag.TerraformError)("terraform init: %v", err)
 	}
 
 	err = tf.StateRm(ctx, fmt.Sprintf("%s.%s", m.resourceType, m.resourceKey))
 	if err != nil {
-		return diag.Errorf("terraform state rm: %v", err)
+		return diag.Errorf(diag.TerraformError)("terraform state rm: %v", err)
 	}
 
 	return nil

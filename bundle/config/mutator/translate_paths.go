@@ -224,7 +224,7 @@ func (m *translatePaths) Apply(_ context.Context, b *bundle.Bundle) diag.Diagnos
 		return v, nil
 	})
 
-	return diag.FromErr(err)
+	return diag.FromErr(diag.ArtifactError, err)
 }
 
 func gatherFallbackPaths(v dyn.Value, typ string) (map[string]string, error) {

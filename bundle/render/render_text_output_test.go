@@ -46,8 +46,8 @@ func TestRenderTextOutput(t *testing.T) {
 		{
 			name:   "bundle during 'load' and 1 error",
 			bundle: loadingBundle,
-			diags:  diag.Errorf("failed to load bundle"),
-			expected: "Error: failed to load bundle\n" +
+			diags:  diag.Errorf(diag.IOError)("failed to load bundle"),
+			expected: "Error: IOERROR: failed to load bundle\n" +
 				"\n" +
 				"Name: test-bundle\n" +
 				"Target: test-target\n" +
@@ -57,8 +57,8 @@ func TestRenderTextOutput(t *testing.T) {
 		{
 			name:   "bundle during 'load' and 1 warning",
 			bundle: loadingBundle,
-			diags:  diag.Warningf("failed to load bundle"),
-			expected: "Warning: failed to load bundle\n" +
+			diags:  diag.Warningf(diag.InternalError)("failed to load bundle"),
+			expected: "Warning: EINTERNAL: failed to load bundle\n" +
 				"\n" +
 				"Name: test-bundle\n" +
 				"Target: test-target\n" +
@@ -68,10 +68,10 @@ func TestRenderTextOutput(t *testing.T) {
 		{
 			name:   "bundle during 'load' and 2 warnings",
 			bundle: loadingBundle,
-			diags:  diag.Warningf("warning (1)").Extend(diag.Warningf("warning (2)")),
-			expected: "Warning: warning (1)\n" +
+			diags:  diag.Warningf(diag.InternalError)("warning (1)").Extend(diag.Warningf(diag.InternalError)("warning (2)")),
+			expected: "Warning: EINTERNAL: warning (1)\n" +
 				"\n" +
-				"Warning: warning (2)\n" +
+				"Warning: EINTERNAL: warning (2)\n" +
 				"\n" +
 				"Name: test-bundle\n" +
 				"Target: test-target\n" +

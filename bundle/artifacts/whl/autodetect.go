@@ -51,7 +51,7 @@ func (m *detectPkg) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostic
 
 	pkgPath, err := filepath.Abs(b.RootPath)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ArtifactError, err)
 	}
 	b.Config.Artifacts[module] = &config.Artifact{
 		Path: pkgPath,

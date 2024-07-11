@@ -117,7 +117,7 @@ func transformDevelopmentMode(ctx context.Context, b *bundle.Bundle) diag.Diagno
 
 func validateDevelopmentMode(b *bundle.Bundle) diag.Diagnostics {
 	if path := findNonUserPath(b); path != "" {
-		return diag.Errorf("%s must start with '~/' or contain the current username when using 'mode: development'", path)
+		return diag.Errorf(diag.TargetModeError)("%s must start with '~/' or contain the current username when using 'mode: development'", path)
 	}
 	return nil
 }
@@ -149,12 +149,12 @@ func validateProductionMode(ctx context.Context, b *bundle.Bundle, isPrincipalUs
 	r := b.Config.Resources
 	for i := range r.Pipelines {
 		if r.Pipelines[i].Development {
-			return diag.Errorf("target with 'mode: production' cannot include a pipeline with 'development: true'")
+			return diag.Errorf(diag.TargetModeError)("target with 'mode: production' cannot include a pipeline with 'development: true'")
 		}
 	}
 
 	if !isPrincipalUsed && !isRunAsSet(r) {
-		return diag.Errorf("'run_as' must be set for all jobs when using 'mode: production'")
+		return diag.Errorf(diag.TargetModeError)("'run_as' must be set for all jobs when using 'mode: production'")
 	}
 	return nil
 }
@@ -185,7 +185,7 @@ func (m *processTargetMode) Apply(ctx context.Context, b *bundle.Bundle) diag.Di
 	case "":
 		// No action
 	default:
-		return diag.Errorf("unsupported value '%s' specified for 'mode': must be either 'development' or 'production'", b.Config.Bundle.Mode)
+		return diag.Errorf(diag.TargetModeError)("unsupported value '%s' specified for 'mode': must be either 'development' or 'production'", b.Config.Bundle.Mode)
 	}
 
 	return nil

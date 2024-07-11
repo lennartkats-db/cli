@@ -25,7 +25,7 @@ func Apply(ctx context.Context, b *Bundle, m Mutator) diag.Diagnostics {
 	err := b.Config.MarkMutatorEntry(ctx)
 	if err != nil {
 		log.Errorf(ctx, "entry error: %s", err)
-		return diag.Errorf("entry error: %s", err)
+		return diag.Errorf(diag.InternalError)("entry error: %s", err)
 	}
 
 	defer func() {

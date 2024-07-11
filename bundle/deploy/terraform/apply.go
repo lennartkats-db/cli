@@ -20,14 +20,14 @@ func (w *apply) Name() string {
 func (w *apply) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	tf := b.Terraform
 	if tf == nil {
-		return diag.Errorf("terraform not initialized")
+		return diag.Errorf(diag.TerraformSetupError)("terraform not initialized")
 	}
 
 	cmdio.LogString(ctx, "Deploying resources...")
 
 	err := tf.Init(ctx, tfexec.Upgrade(true))
 	if err != nil {
-		return diag.Errorf("terraform init: %v", err)
+		return diag.Errorf(diag.TerraformError)("terraform init: %v", err)
 	}
 
 	err = tf.Apply(ctx)
@@ -36,7 +36,7 @@ func (w *apply) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 		if diags != nil {
 			return diags
 		}
-		return diag.Errorf("terraform apply: %v", err)
+		return diag.Errorf(diag.TerraformError)("terraform apply: %v", err)
 	}
 
 	log.Infof(ctx, "Resource deployment completed")

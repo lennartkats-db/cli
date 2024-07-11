@@ -22,12 +22,12 @@ func (v *filesToSync) Name() string {
 func (v *filesToSync) Apply(ctx context.Context, rb bundle.ReadOnlyBundle) diag.Diagnostics {
 	sync, err := files.GetSync(ctx, rb)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.SyncError, err)
 	}
 
 	fl, err := sync.GetFileList(ctx)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.SyncError, err)
 	}
 
 	if len(fl) != 0 {

@@ -47,19 +47,19 @@ func isPermissionOverlap(
 	for _, rp := range resourcePermissions {
 		if rp.GroupName != "" && rp.GroupName == permission.GroupName {
 			diagnostics = diagnostics.Extend(
-				diag.Warningf("'%s' already has permissions set for '%s' group", resourceName, rp.GroupName),
+				diag.Warningf(diag.ConfigurationWarning)("'%s' already has permissions set for '%s' group", resourceName, rp.GroupName),
 			)
 		}
 
 		if rp.UserName != "" && rp.UserName == permission.UserName {
 			diagnostics = diagnostics.Extend(
-				diag.Warningf("'%s' already has permissions set for '%s' user name", resourceName, rp.UserName),
+				diag.Warningf(diag.ConfigurationWarning)("'%s' already has permissions set for '%s' user name", resourceName, rp.UserName),
 			)
 		}
 
 		if rp.ServicePrincipalName != "" && rp.ServicePrincipalName == permission.ServicePrincipalName {
 			diagnostics = diagnostics.Extend(
-				diag.Warningf("'%s' already has permissions set for '%s' service principal name", resourceName, rp.ServicePrincipalName),
+				diag.Warningf(diag.ConfigurationWarning)("'%s' already has permissions set for '%s' service principal name", resourceName, rp.ServicePrincipalName),
 			)
 		}
 	}

@@ -95,7 +95,7 @@ func MustConfigureBundle(cmd *cobra.Command) (*bundle.Bundle, diag.Diagnostics) 
 
 	b, err := bundle.MustLoad(cmd.Context())
 	if err != nil {
-		return nil, diag.FromErr(err)
+		return nil, diag.FromErr(diag.IOError, err)
 	}
 
 	return configureBundle(cmd, b)
@@ -113,7 +113,7 @@ func TryConfigureBundle(cmd *cobra.Command) (*bundle.Bundle, diag.Diagnostics) {
 
 	b, err := bundle.TryLoad(cmd.Context())
 	if err != nil {
-		return nil, diag.FromErr(err)
+		return nil, diag.FromErr(diag.IOError, err)
 	}
 
 	// No bundle is fine in this case.

@@ -62,5 +62,5 @@ func (m *environmentsToTargets) Apply(ctx context.Context, b *bundle.Bundle) dia
 		return v, nil
 	})
 
-	return diag.FromErr(err)
+	return diag.FromErr(diag.EnvironmentError, err)
 }

@@ -29,28 +29,28 @@ type importResource struct {
 func (m *importResource) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	dir, err := Dir(ctx, b)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.IOError, err)
 	}
 
 	tf := b.Terraform
 	if tf == nil {
-		return diag.Errorf("terraform not initialized")
+		return diag.Errorf(diag.InternalError)("terraform not initialized")
 	}
 
 	err = tf.Init(ctx, tfexec.Upgrade(true))
 	if err != nil {
-		return diag.Errorf("terraform init: %v", err)
+		return diag.Errorf(diag.TerraformSetupError)("terraform init: %v", err)
 	}
 	tmpDir, err := os.MkdirTemp("", "state-*")
 	if err != nil {
-		return diag.Errorf("terraform init: %v", err)
+		return diag.Errorf(diag.IOError)("temp dir: %v", err)
 	}
 	tmpState := filepath.Join(tmpDir, TerraformStateFileName)
 
 	importAddress := fmt.Sprintf("%s.%s", m.opts.ResourceType, m.opts.ResourceKey)
 	err = tf.Import(ctx, importAddress, m.opts.ResourceId, tfexec.StateOut(tmpState))
 	if err != nil {
-		return diag.Errorf("terraform import: %v", err)
+		return diag.Errorf(diag.TerraformError)("terraform import: %v", err)
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -59,7 +59,7 @@ func (m *importResource) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagn
 	//lint:ignore SA1019 We use legacy -state flag for now to plan the import changes based on temporary state file
 	changed, err := tf.Plan(ctx, tfexec.State(tmpState), tfexec.Target(importAddress))
 	if err != nil {
-		return diag.Errorf("terraform plan: %v", err)
+		return diag.Errorf(diag.TerraformError)("terraform plan: %v", err)
 	}
 
 	defer os.RemoveAll(tmpDir)
@@ -71,29 +71,29 @@ func (m *importResource) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagn
 		cmdio.LogString(ctx, output)
 		ans, err := cmdio.AskYesOrNo(ctx, "Confirm import changes? Changes will be remotely applied only after running 'bundle deploy'.")
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(diag.IOError, err)
 		}
 		if !ans {
-			return diag.Errorf("import aborted")
+			return diag.Errorf(diag.AbortedError)("import aborted")
 		}
 	}
 
 	// If user confirmed changes, move the state file from temp dir to state location
 	f, err := os.Create(filepath.Join(dir, TerraformStateFileName))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.IOError, err)
 	}
 	defer f.Close()
 
 	tmpF, err := os.Open(tmpState)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.IOError, err)
 	}
 	defer tmpF.Close()
 
 	_, err = io.Copy(f, tmpF)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.IOError, err)
 	}
 
 	return nil

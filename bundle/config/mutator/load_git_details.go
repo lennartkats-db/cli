@@ -24,7 +24,7 @@ func (m *loadGitDetails) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagn
 	// Load relevant git repository
 	repo, err := git.NewRepository(b.BundleRoot)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.GitError, err)
 	}
 
 	// Read branch name of current checkout
@@ -58,12 +58,12 @@ func (m *loadGitDetails) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagn
 	// Compute relative path of the bundle root from the Git repo root.
 	absBundlePath, err := filepath.Abs(b.RootPath)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.GitError, err)
 	}
 	// repo.Root() returns the absolute path of the repo
 	relBundlePath, err := filepath.Rel(repo.Root(), absBundlePath)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.GitError, err)
 	}
 	b.Config.Bundle.Git.BundleRootPath = filepath.ToSlash(relBundlePath)
 	return nil

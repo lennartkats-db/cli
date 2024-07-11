@@ -43,7 +43,7 @@ func (m *acquire) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics 
 
 	err := m.init(b)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.LockError, err)
 	}
 
 	force := b.Config.Bundle.Deployment.Lock.Force
@@ -56,7 +56,7 @@ func (m *acquire) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics 
 			return permissions.ReportPermissionDenied(ctx, b, b.Config.Workspace.StatePath)
 		}
 
-		return diag.FromErr(err)
+		return diag.FromErr(diag.LockError, err)
 	}
 
 	return nil

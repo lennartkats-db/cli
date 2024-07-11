@@ -65,5 +65,5 @@ func (m *interpolateMutator) Apply(ctx context.Context, b *bundle.Bundle) diag.D
 		})
 	})
 
-	return diag.FromErr(err)
+	return diag.FromErr(diag.TerraformSetupError, err)
 }

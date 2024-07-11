@@ -40,7 +40,7 @@ func overrideJobCompute(j *resources.Job, compute string) {
 func (m *overrideCompute) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	if b.Config.Bundle.Mode != config.Development {
 		if b.Config.Bundle.ComputeID != "" {
-			return diag.Errorf("cannot override compute for an target that does not use 'mode: development'")
+			return diag.Errorf(diag.TargetModeError)("can only override compute for a target that uses 'mode: development'")
 		}
 		return nil
 	}

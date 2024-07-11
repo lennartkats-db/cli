@@ -30,27 +30,27 @@ func (p *plan) Name() string {
 func (p *plan) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	tf := b.Terraform
 	if tf == nil {
-		return diag.Errorf("terraform not initialized")
+		return diag.Errorf(diag.InternalError)("terraform not initialized")
 	}
 
 	cmdio.LogString(ctx, "Starting plan computation")
 
 	err := tf.Init(ctx, tfexec.Upgrade(true))
 	if err != nil {
-		return diag.Errorf("terraform init: %v", err)
+		return diag.Errorf(diag.TerraformSetupError)("terraform init: %v", err)
 	}
 
 	// Persist computed plan
 	tfDir, err := Dir(ctx, b)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.IOError, err)
 	}
 	planPath := filepath.Join(tfDir, "plan")
 	destroy := p.goal == PlanDestroy
 
 	notEmpty, err := tf.Plan(ctx, tfexec.Destroy(destroy), tfexec.Out(planPath))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.TerraformError, err)
 	}
 
 	// Set plan in main bundle struct for downstream mutators

@@ -25,11 +25,11 @@ func (m *defineDefaultWorkspaceRoot) Apply(ctx context.Context, b *bundle.Bundle
 	}
 
 	if b.Config.Bundle.Name == "" {
-		return diag.Errorf("unable to define default workspace root: bundle name not defined")
+		return diag.Errorf(diag.ConfigurationError)("unable to define default workspace root: bundle name not defined")
 	}
 
 	if b.Config.Bundle.Target == "" {
-		return diag.Errorf("unable to define default workspace root: bundle target not selected")
+		return diag.Errorf(diag.ConfigurationError)("unable to define default workspace root: bundle target not selected")
 	}
 
 	b.Config.Workspace.RootPath = fmt.Sprintf(

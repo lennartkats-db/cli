@@ -30,12 +30,12 @@ func (v *validateSyncPatterns) Apply(ctx context.Context, rb bundle.ReadOnlyBund
 
 	diags, err := checkPatterns(s.Exclude, "sync.exclude", rb)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ConfigurationError, err)
 	}
 
 	includeDiags, err := checkPatterns(s.Include, "sync.include", rb)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ConfigurationError, err)
 	}
 
 	return diags.Extend(includeDiags)

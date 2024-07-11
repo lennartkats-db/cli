@@ -22,5 +22,5 @@ func (m *initializeWorkspaceClient) Name() string {
 // auth configuration.
 func (m *initializeWorkspaceClient) Apply(_ context.Context, b *bundle.Bundle) diag.Diagnostics {
 	_, err := b.InitializeWorkspaceClient()
-	return diag.FromErr(err)
+	return diag.FromErr(diag.WorkspaceClientError, err)
 }

@@ -87,7 +87,7 @@ func (m *pythonMutator) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagno
 	}
 
 	if experimental.PyDABs.VEnvPath == "" {
-		return diag.Errorf("\"experimental.pydabs.enabled\" can only be used when \"experimental.pydabs.venv_path\" is set")
+		return diag.Errorf(diag.PyDABsError)("\"experimental.pydabs.enabled\" can only be used when \"experimental.pydabs.venv_path\" is set")
 	}
 
 	// mutateDiags is used because Mutate returns 'error' instead of 'diag.Diagnostics'
@@ -132,7 +132,7 @@ func (m *pythonMutator) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagno
 		return mutateDiags
 	}
 
-	return mutateDiags.Extend(diag.FromErr(err))
+	return mutateDiags.Extend(diag.FromErr(diag.PyDABsError, err))
 }
 
 func createCacheDir(ctx context.Context) (string, error) {
@@ -174,7 +174,7 @@ func (m *pythonMutator) runPythonMutator(ctx context.Context, cacheDir string, r
 	}
 
 	if err := writeInputFile(inputPath, root); err != nil {
-		return dyn.InvalidValue, diag.Errorf("failed to write input file: %s", err)
+		return dyn.InvalidValue, diag.Errorf(diag.PyDABsError)("failed to write input file: %s", err)
 	}
 
 	stderrWriter := newLogWriter(ctx, "stderr: ")
@@ -205,17 +205,17 @@ func (m *pythonMutator) runPythonMutator(ctx context.Context, cacheDir string, r
 	// process can fail without reporting errors in diagnostics file or creating it, for instance,
 	// venv doesn't have PyDABs library installed
 	if processErr != nil {
-		return dyn.InvalidValue, diag.Errorf("python mutator process failed: %sw, use --debug to enable logging", processErr)
+		return dyn.InvalidValue, diag.Errorf(diag.PyDABsMutatorError)("python mutator process failed: %sw, use --debug to enable logging", processErr)
 	}
 
 	// or we can fail to read diagnostics file, that should always be created
 	if pythonDiagnosticsErr != nil {
-		return dyn.InvalidValue, diag.Errorf("failed to load diagnostics: %s", pythonDiagnosticsErr)
+		return dyn.InvalidValue, diag.Errorf(diag.PyDABsError)("failed to load diagnostics: %s", pythonDiagnosticsErr)
 	}
 
 	output, err := loadOutputFile(rootPath, outputPath)
 	if err != nil {
-		return dyn.InvalidValue, diag.Errorf("failed to load Python mutator output: %s", err)
+		return dyn.InvalidValue, diag.Errorf(diag.PyDABsError)("failed to load Python mutator output: %s", err)
 	}
 
 	// we pass through pythonDiagnostic because it contains warnings

@@ -23,7 +23,7 @@ func (m *upload) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	cmdio.LogString(ctx, fmt.Sprintf("Uploading bundle files to %s...", b.Config.Workspace.FilePath))
 	sync, err := GetSync(ctx, bundle.ReadOnly(b))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.SyncError, err)
 	}
 
 	b.Files, err = sync.RunOnce(ctx)
@@ -31,7 +31,7 @@ func (m *upload) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 		if errors.Is(err, fs.ErrPermission) {
 			return permissions.ReportPermissionDenied(ctx, b, b.Config.Workspace.StatePath)
 		}
-		return diag.FromErr(err)
+		return diag.FromErr(diag.SyncError, err)
 	}
 
 	log.Infof(ctx, "Uploaded bundle files")

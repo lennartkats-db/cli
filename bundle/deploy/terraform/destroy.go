@@ -72,19 +72,19 @@ func (w *destroy) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics 
 
 	tf := b.Terraform
 	if tf == nil {
-		return diag.Errorf("terraform not initialized")
+		return diag.Errorf(diag.InternalError)("terraform not initialized")
 	}
 
 	// read plan file
 	plan, err := tf.ShowPlanFile(ctx, b.Plan.Path)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.TerraformError, err)
 	}
 
 	// print the resources that will be destroyed
 	err = logDestroyPlan(ctx, plan.ResourceChanges)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.TerraformError, err)
 	}
 
 	// Ask for confirmation, if needed
@@ -92,7 +92,7 @@ func (w *destroy) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics 
 		red := color.New(color.FgRed).SprintFunc()
 		b.Plan.ConfirmApply, err = cmdio.AskYesOrNo(ctx, fmt.Sprintf("\nThis will permanently %s resources! Proceed?", red("destroy")))
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(diag.IOError, err)
 		}
 	}
 
@@ -102,7 +102,7 @@ func (w *destroy) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics 
 	}
 
 	if b.Plan.Path == "" {
-		return diag.Errorf("no plan found")
+		return diag.Errorf(diag.TerraformError)("no plan found")
 	}
 
 	cmdio.LogString(ctx, "Starting to destroy resources")
@@ -110,7 +110,7 @@ func (w *destroy) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics 
 	// Apply terraform according to the computed destroy plan
 	err = tf.Apply(ctx, tfexec.DirOrPlan(b.Plan.Path))
 	if err != nil {
-		return diag.Errorf("terraform destroy: %v", err)
+		return diag.Errorf(diag.TerraformError)("terraform destroy: %v", err)
 	}
 
 	cmdio.LogString(ctx, "Successfully destroyed resources!")

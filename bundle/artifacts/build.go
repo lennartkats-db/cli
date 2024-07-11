@@ -32,7 +32,7 @@ func (m *build) Name() string {
 func (m *build) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	artifact, ok := b.Config.Artifacts[m.name]
 	if !ok {
-		return diag.Errorf("artifact doesn't exist: %s", m.name)
+		return diag.Errorf(diag.BuildError)("artifact doesn't exist: %s", m.name)
 	}
 
 	// Check if source paths are absolute, if not, make them absolute
@@ -49,11 +49,11 @@ func (m *build) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	for _, f := range artifact.Files {
 		matches, err := filepath.Glob(f.Source)
 		if err != nil {
-			return diag.Errorf("unable to find files for %s: %v", f.Source, err)
+			return diag.Errorf(diag.BuildError)("unable to find files for %s: %v", f.Source, err)
 		}
 
 		if len(matches) == 0 {
-			return diag.Errorf("no files found for %s", f.Source)
+			return diag.Errorf(diag.BuildError)("no files found for %s", f.Source)
 		}
 
 		for _, match := range matches {
@@ -70,7 +70,7 @@ func (m *build) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 		// If no build command was specified or infered and there is no
 		// artifact output files specified, artifact is misconfigured
 		if len(artifact.Files) == 0 {
-			return diag.Errorf("misconfigured artifact: please specify 'build' or 'files' property")
+			return diag.Errorf(diag.BuildError)("misconfigured artifact: please specify 'build' or 'files' property")
 		}
 		return nil
 	}

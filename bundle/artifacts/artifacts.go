@@ -61,14 +61,14 @@ func (m *basicBuild) Name() string {
 func (m *basicBuild) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	artifact, ok := b.Config.Artifacts[m.name]
 	if !ok {
-		return diag.Errorf("artifact doesn't exist: %s", m.name)
+		return diag.Errorf(diag.ArtifactError)("artifact doesn't exist: %s", m.name)
 	}
 
 	cmdio.LogString(ctx, fmt.Sprintf("Building %s...", m.name))
 
 	out, err := artifact.Build(ctx)
 	if err != nil {
-		return diag.Errorf("build for %s failed, error: %v, output: %s", m.name, err, out)
+		return diag.Errorf(diag.ArtifactError)("build for %s failed, error: %v, output: %s", m.name, err, out)
 	}
 	log.Infof(ctx, "Build succeeded")
 
@@ -91,26 +91,26 @@ func (m *basicUpload) Name() string {
 func (m *basicUpload) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	artifact, ok := b.Config.Artifacts[m.name]
 	if !ok {
-		return diag.Errorf("artifact doesn't exist: %s", m.name)
+		return diag.Errorf(diag.ArtifactError)("artifact doesn't exist: %s", m.name)
 	}
 
 	if len(artifact.Files) == 0 {
-		return diag.Errorf("artifact source is not configured: %s", m.name)
+		return diag.Errorf(diag.ArtifactError)("artifact source is not configured: %s", m.name)
 	}
 
 	uploadPath, err := getUploadBasePath(b)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ArtifactError, err)
 	}
 
 	client, err := filer.NewWorkspaceFilesClient(b.WorkspaceClient(), uploadPath)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ArtifactError, err)
 	}
 
 	err = uploadArtifact(ctx, b, artifact, uploadPath, client)
 	if err != nil {
-		return diag.Errorf("upload for %s failed, error: %v", m.name, err)
+		return diag.Errorf(diag.ArtifactError)("upload for %s failed, error: %v", m.name, err)
 	}
 
 	return nil
@@ -137,7 +137,6 @@ func uploadArtifact(ctx context.Context, b *bundle.Bundle, a *config.Artifact, u
 
 		for _, job := range b.Config.Resources.Jobs {
 			rewriteArtifactPath(b, f, job, remotePath)
-
 		}
 	}
 

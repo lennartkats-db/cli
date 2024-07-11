@@ -147,7 +147,7 @@ func TestResolveVariableReferencesForPrimitiveNonStringFields(t *testing.T) {
 			"max_workers=2",
 			"spot_bid_max_price=0.5",
 		})
-		return diag.FromErr(err)
+		return diag.FromErr(diag.VariableError, err)
 	})
 	require.NoError(t, diags.Error())
 
@@ -178,7 +178,7 @@ func TestResolveVariableReferencesForPrimitiveNonStringFields(t *testing.T) {
 
 			return v, nil
 		})
-		return diag.FromErr(err)
+		return diag.FromErr(diag.VariableError, err)
 	})
 	require.NoError(t, diags.Error())
 
@@ -240,7 +240,7 @@ func TestResolveComplexVariable(t *testing.T) {
 
 			return v, nil
 		})
-		return diag.FromErr(err)
+		return diag.FromErr(diag.VariableError, err)
 	})
 	require.NoError(t, diags.Error())
 
@@ -298,7 +298,7 @@ func TestResolveComplexVariableReferencesToFields(t *testing.T) {
 
 			return v, nil
 		})
-		return diag.FromErr(err)
+		return diag.FromErr(diag.VariableError, err)
 	})
 	require.NoError(t, diags.Error())
 
@@ -363,7 +363,7 @@ func TestResolveComplexVariableReferencesWithComplexVariablesError(t *testing.T)
 
 			return v, nil
 		})
-		return diag.FromErr(err)
+		return diag.FromErr(diag.VariableError, err)
 	})
 	require.NoError(t, diags.Error())
 
@@ -423,7 +423,7 @@ func TestResolveComplexVariableWithVarReference(t *testing.T) {
 
 			return v, nil
 		})
-		return diag.FromErr(err)
+		return diag.FromErr(diag.VariableError, err)
 	})
 	require.NoError(t, diags.Error())
 

@@ -26,13 +26,13 @@ func (a *match) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	for _, job := range b.Config.Resources.Jobs {
 		err := validateEnvironments(job.Environments, b)
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(diag.ConfigurationError, err)
 		}
 
 		for _, task := range job.JobSettings.Tasks {
 			err := validateTaskLibraries(task.Libraries, b)
 			if err != nil {
-				return diag.FromErr(err)
+				return diag.FromErr(diag.ConfigurationError, err)
 			}
 		}
 	}

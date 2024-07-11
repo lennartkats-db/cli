@@ -44,5 +44,5 @@ func (m *mergePipelineClusters) Apply(ctx context.Context, b *bundle.Bundle) dia
 		}))
 	})
 
-	return diag.FromErr(err)
+	return diag.FromErr(diag.ConfigurationError, err)
 }

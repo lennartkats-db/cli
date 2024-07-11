@@ -31,12 +31,12 @@ func setVariable(ctx context.Context, v *variable.Variable, name string) diag.Di
 	envVarName := bundleVarPrefix + name
 	if val, ok := env.Lookup(ctx, envVarName); ok {
 		if v.IsComplex() {
-			return diag.Errorf(`setting via environment variables (%s) is not supported for complex variable %s`, envVarName, name)
+			return diag.Errorf(diag.VariableError)(`setting via environment variables (%s) is not supported for complex variable %s`, envVarName, name)
 		}
 
 		err := v.Set(val)
 		if err != nil {
-			return diag.Errorf(`failed to assign value "%s" to variable %s from environment variable %s with error: %v`, val, name, envVarName, err)
+			return diag.Errorf(diag.VariableError)(`failed to assign value "%s" to variable %s from environment variable %s with error: %v`, val, name, envVarName, err)
 		}
 		return nil
 	}
@@ -51,13 +51,13 @@ func setVariable(ctx context.Context, v *variable.Variable, name string) diag.Di
 	if v.HasDefault() {
 		err := v.Set(v.Default)
 		if err != nil {
-			return diag.Errorf(`failed to assign default value from config "%s" to variable %s with error: %v`, v.Default, name, err)
+			return diag.Errorf(diag.VariableError)(`failed to assign default value from config "%s" to variable %s with error: %v`, v.Default, name, err)
 		}
 		return nil
 	}
 
 	// We should have had a value to set for the variable at this point.
-	return diag.Errorf(`no value assigned to required variable %s. Assignment can be done through the "--var" flag or by setting the %s environment variable`, name, bundleVarPrefix+name)
+	return diag.Errorf(diag.VariableError)(`no value assigned to required variable %s. Assignment can be done through the "--var" flag or by setting the %s environment variable`, name, bundleVarPrefix+name)
 }
 
 func (m *setVariables) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {

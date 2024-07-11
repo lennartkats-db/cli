@@ -22,7 +22,7 @@ func (m *entryPoint) Name() string {
 func (m *entryPoint) Apply(_ context.Context, b *bundle.Bundle) diag.Diagnostics {
 	path, err := config.FileNames.FindInPath(b.RootPath)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ConfigurationError, err)
 	}
 	this, diags := config.Load(path)
 	if diags.HasError() {
@@ -30,7 +30,7 @@ func (m *entryPoint) Apply(_ context.Context, b *bundle.Bundle) diag.Diagnostics
 	}
 	err = b.Config.Merge(this)
 	if err != nil {
-		diags = diags.Extend(diag.FromErr(err))
+		diags = diags.Extend(diag.FromErr(diag.ConfigurationError, err))
 	}
 	return diags
 }

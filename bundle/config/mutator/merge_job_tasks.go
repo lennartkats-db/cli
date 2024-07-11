@@ -41,5 +41,5 @@ func (m *mergeJobTasks) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagno
 		}))
 	})
 
-	return diag.FromErr(err)
+	return diag.FromErr(diag.ConfigurationError, err)
 }

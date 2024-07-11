@@ -29,7 +29,7 @@ func (m *populateCurrentUser) Apply(ctx context.Context, b *bundle.Bundle) diag.
 	w := b.WorkspaceClient()
 	me, err := w.CurrentUser.Me(ctx)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.WorkspaceClientError, err)
 	}
 
 	b.Config.Workspace.CurrentUser = &config.User{

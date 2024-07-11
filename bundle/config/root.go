@@ -71,7 +71,7 @@ type Root struct {
 func Load(path string) (*Root, diag.Diagnostics) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
-		return nil, diag.FromErr(err)
+		return nil, diag.FromErr(diag.IOError, err)
 	}
 
 	return LoadFromBytes(path, raw)
@@ -83,13 +83,13 @@ func LoadFromBytes(path string, raw []byte) (*Root, diag.Diagnostics) {
 	// Load configuration tree from YAML.
 	v, err := yamlloader.LoadYAML(path, bytes.NewBuffer(raw))
 	if err != nil {
-		return nil, diag.Errorf("failed to load %s: %v", path, err)
+		return nil, diag.Errorf(diag.ConfigurationError)("failed to load %s: %v", path, err)
 	}
 
 	// Rewrite configuration tree where necessary.
 	v, err = rewriteShorthands(v)
 	if err != nil {
-		return nil, diag.Errorf("failed to rewrite %s: %v", path, err)
+		return nil, diag.Errorf(diag.ConfigurationError)("failed to rewrite %s: %v", path, err)
 	}
 
 	// Normalize dynamic configuration tree according to configuration type.
@@ -98,12 +98,12 @@ func LoadFromBytes(path string, raw []byte) (*Root, diag.Diagnostics) {
 	// Convert normalized configuration tree to typed configuration.
 	err = r.updateWithDynamicValue(v)
 	if err != nil {
-		return nil, diag.Errorf("failed to load %s: %v", path, err)
+		return nil, diag.Errorf(diag.ConfigurationError)("failed to load %s: %v", path, err)
 	}
 
 	_, err = r.Resources.VerifyUniqueResourceIdentifiers()
 	if err != nil {
-		diags = diags.Extend(diag.FromErr(err))
+		diags = diags.Extend(diag.FromErr(diag.ConfigurationError, err))
 	}
 	return &r, diags
 }

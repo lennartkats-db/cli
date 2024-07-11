@@ -22,7 +22,7 @@ func (m *defineDefaultWorkspacePaths) Name() string {
 func (m *defineDefaultWorkspacePaths) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	root := b.Config.Workspace.RootPath
 	if root == "" {
-		return diag.Errorf("unable to define default workspace paths: workspace root not defined")
+		return diag.Errorf(diag.ConfigurationError)("unable to define default workspace paths: workspace root not defined")
 	}
 
 	if b.Config.Workspace.FilePath == "" {

@@ -23,7 +23,7 @@ type addToContainer struct {
 
 func (m *addToContainer) Apply(ctx context.Context, b ReadOnlyBundle) diag.Diagnostics {
 	if m.err {
-		return diag.Errorf("error")
+		return diag.Errorf(diag.AbortedError)("error")
 	}
 
 	m.mu.Lock()

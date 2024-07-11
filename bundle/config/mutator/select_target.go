@@ -27,19 +27,19 @@ func (m *selectTarget) Name() string {
 
 func (m *selectTarget) Apply(_ context.Context, b *bundle.Bundle) diag.Diagnostics {
 	if b.Config.Targets == nil {
-		return diag.Errorf("no targets defined")
+		return diag.Errorf(diag.ConfigurationError)("no targets defined")
 	}
 
 	// Get specified target
 	_, ok := b.Config.Targets[m.name]
 	if !ok {
-		return diag.Errorf("%s: no such target. Available targets: %s", m.name, strings.Join(maps.Keys(b.Config.Targets), ", "))
+		return diag.Errorf(diag.ConfigurationError)("%s: no such target. Available targets: %s", m.name, strings.Join(maps.Keys(b.Config.Targets), ", "))
 	}
 
 	// Merge specified target into root configuration structure.
 	err := b.Config.MergeTargetOverrides(m.name)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ConfigurationError, err)
 	}
 
 	// Store specified target in configuration for reference.

@@ -189,5 +189,5 @@ func (m *resolveVariableReferences) Apply(ctx context.Context, b *bundle.Bundle)
 		return root, nil
 	})
 
-	return diag.FromErr(err)
+	return diag.FromErr(diag.VariableError, err)
 }

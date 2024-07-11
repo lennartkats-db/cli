@@ -17,7 +17,7 @@ func (m *infer) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	artifact := b.Config.Artifacts[m.name]
 	py, err := python.DetectExecutable(ctx)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ArtifactError, err)
 	}
 
 	// Note: using --build-number (build tag) flag does not help with re-installing

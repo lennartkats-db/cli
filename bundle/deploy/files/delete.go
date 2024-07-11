@@ -34,7 +34,7 @@ func (m *delete) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	if !b.AutoApprove {
 		proceed, err := cmdio.AskYesOrNo(ctx, fmt.Sprintf("\n%s and all files in it will be %s Proceed?", b.Config.Workspace.RootPath, red("deleted permanently!")))
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(diag.AbortedError, err)
 		}
 		if !proceed {
 			return nil
@@ -46,13 +46,13 @@ func (m *delete) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 		Recursive: true,
 	})
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.WorkspaceClientError, err)
 	}
 
 	// Clean up sync snapshot file
 	err = deleteSnapshotFile(ctx, b)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.WorkspaceClientError, err)
 	}
 
 	cmdio.LogString(ctx, "Successfully deleted files!")

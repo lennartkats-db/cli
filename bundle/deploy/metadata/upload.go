@@ -30,13 +30,13 @@ func (m *upload) Name() string {
 func (m *upload) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	f, err := filer.NewWorkspaceFilesClient(b.WorkspaceClient(), b.Config.Workspace.StatePath)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.WorkspaceClientError, err)
 	}
 
 	metadata, err := json.MarshalIndent(b.Metadata, "", "  ")
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ConfigurationError, err)
 	}
 
-	return diag.FromErr(f.Write(ctx, metadataFileName, bytes.NewReader(metadata), filer.CreateParentDirectories, filer.OverwriteIfExists))
+	return diag.FromErr(diag.SyncError, f.Write(ctx, metadataFileName, bytes.NewReader(metadata), filer.CreateParentDirectories, filer.OverwriteIfExists))
 }

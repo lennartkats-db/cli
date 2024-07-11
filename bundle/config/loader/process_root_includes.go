@@ -43,19 +43,19 @@ func (m *processRootIncludes) Apply(ctx context.Context, b *bundle.Bundle) diag.
 	for _, entry := range b.Config.Include {
 		// Include paths must be relative.
 		if filepath.IsAbs(entry) {
-			return diag.Errorf("%s: includes must be relative paths", entry)
+			return diag.Errorf(diag.ConfigurationError)("%s: includes must be relative paths", entry)
 		}
 
 		// Anchor includes to the bundle root path.
 		matches, err := filepath.Glob(filepath.Join(b.RootPath, entry))
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(diag.ConfigurationError, err)
 		}
 
 		// If the entry is not a glob pattern and no matches found,
 		// return an error because the file defined is not found
 		if len(matches) == 0 && !strings.ContainsAny(entry, "*?[") {
-			return diag.Errorf("%s defined in 'include' section does not match any files", entry)
+			return diag.Errorf(diag.ConfigurationError)("%s defined in 'include' section does not match any files", entry)
 		}
 
 		// Filter matches to ones we haven't seen yet.
@@ -63,7 +63,7 @@ func (m *processRootIncludes) Apply(ctx context.Context, b *bundle.Bundle) diag.
 		for _, match := range matches {
 			rel, err := filepath.Rel(b.RootPath, match)
 			if err != nil {
-				return diag.FromErr(err)
+				return diag.FromErr(diag.ConfigurationError, err)
 			}
 			if _, ok := seen[rel]; ok {
 				continue

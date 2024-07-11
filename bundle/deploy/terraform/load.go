@@ -25,28 +25,28 @@ func (l *load) Name() string {
 func (l *load) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	tf := b.Terraform
 	if tf == nil {
-		return diag.Errorf("terraform not initialized")
+		return diag.Errorf(diag.InternalError)("terraform not initialized")
 	}
 
 	err := tf.Init(ctx, tfexec.Upgrade(true))
 	if err != nil {
-		return diag.Errorf("terraform init: %v", err)
+		return diag.Errorf(diag.TerraformSetupError)("terraform init: %v", err)
 	}
 
 	state, err := ParseResourcesState(ctx, b)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.TerraformError, err)
 	}
 
 	err = l.validateState(state)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.TerraformError, err)
 	}
 
 	// Merge state into configuration.
 	err = TerraformToBundle(state, &b.Config)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.InternalError, err)
 	}
 
 	return nil

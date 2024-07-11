@@ -41,7 +41,7 @@ func (m *resolveResourceReferences) Apply(ctx context.Context, b *bundle.Bundle)
 		})
 	}
 
-	return diag.FromErr(errs.Wait())
+	return diag.FromErr(diag.ReferenceError, errs.Wait())
 }
 
 func (*resolveResourceReferences) Name() string {

@@ -26,21 +26,21 @@ func (v *verifyCliVersion) Apply(ctx context.Context, b *bundle.Bundle) diag.Dia
 
 	constraint := b.Config.Bundle.DatabricksCliVersion
 	if err := validateConstraintSyntax(constraint); err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ConfigurationError, err)
 	}
 	currentVersion := build.GetInfo().Version
 	c, err := semver.NewConstraint(constraint)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ConfigurationError, err)
 	}
 
 	version, err := semver.NewVersion(currentVersion)
 	if err != nil {
-		return diag.Errorf("parsing CLI version %q failed", currentVersion)
+		return diag.Errorf(diag.ConfigurationError)("parsing CLI version %q failed", currentVersion)
 	}
 
 	if !c.Check(version) {
-		return diag.Errorf("Databricks CLI version constraint not satisfied. Required: %s, current: %s", constraint, currentVersion)
+		return diag.Errorf(diag.CLIVersionError)("Databricks CLI version constraint not satisfied. Required: %s, current: %s", constraint, currentVersion)
 	}
 
 	return nil

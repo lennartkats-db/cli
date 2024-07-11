@@ -35,11 +35,11 @@ func (m *upload) Name() string {
 func (m *upload) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	artifact, ok := b.Config.Artifacts[m.name]
 	if !ok {
-		return diag.Errorf("artifact doesn't exist: %s", m.name)
+		return diag.Errorf(diag.ArtifactError)("artifact doesn't exist: %s", m.name)
 	}
 
 	if len(artifact.Files) == 0 {
-		return diag.Errorf("artifact source is not configured: %s", m.name)
+		return diag.Errorf(diag.ArtifactError)("artifact source is not configured: %s", m.name)
 	}
 
 	return bundle.Apply(ctx, b, getUploadMutator(artifact.Type, m.name))
@@ -54,7 +54,7 @@ func (m *cleanUp) Name() string {
 func (m *cleanUp) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	uploadPath, err := getUploadBasePath(b)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ArtifactError, err)
 	}
 
 	b.WorkspaceClient().Workspace.Delete(ctx, workspace.Delete{
@@ -64,7 +64,7 @@ func (m *cleanUp) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics 
 
 	err = b.WorkspaceClient().Workspace.MkdirsByPath(ctx, uploadPath)
 	if err != nil {
-		return diag.Errorf("unable to create directory for %s: %v", uploadPath, err)
+		return diag.Errorf(diag.IOError)("unable to create directory for %s: %v", uploadPath, err)
 	}
 
 	return nil

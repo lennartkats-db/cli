@@ -18,25 +18,20 @@ func ApplyWorkspaceRootPermissions() bundle.Mutator {
 
 // Apply implements bundle.Mutator.
 func (*workspaceRootPermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
-	err := giveAccessForWorkspaceRoot(ctx, b)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
+	return giveAccessForWorkspaceRoot(ctx, b)
 }
 
 func (*workspaceRootPermissions) Name() string {
 	return "ApplyWorkspaceRootPermissions"
 }
 
-func giveAccessForWorkspaceRoot(ctx context.Context, b *bundle.Bundle) error {
+func giveAccessForWorkspaceRoot(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	permissions := make([]workspace.WorkspaceObjectAccessControlRequest, 0)
 
 	for _, p := range b.Config.Permissions {
 		level, err := getWorkspaceObjectPermissionLevel(p.Level)
 		if err != nil {
-			return err
+			return diag.FromErr(diag.ConfigurationError, err)
 		}
 
 		permissions = append(permissions, workspace.WorkspaceObjectAccessControlRequest{
@@ -54,7 +49,7 @@ func giveAccessForWorkspaceRoot(ctx context.Context, b *bundle.Bundle) error {
 	w := b.WorkspaceClient().Workspace
 	obj, err := w.GetStatusByPath(ctx, b.Config.Workspace.RootPath)
 	if err != nil {
-		return err
+		return diag.FromErr(diag.WorkspaceClientError, err)
 	}
 
 	_, err = w.UpdatePermissions(ctx, workspace.WorkspaceObjectPermissionsRequest{
@@ -62,7 +57,7 @@ func giveAccessForWorkspaceRoot(ctx context.Context, b *bundle.Bundle) error {
 		WorkspaceObjectType: "directories",
 		AccessControlList:   permissions,
 	})
-	return err
+	return diag.FromErr(diag.WorkspaceClientError, err)
 }
 
 func getWorkspaceObjectPermissionLevel(bundlePermission string) (workspace.WorkspaceObjectPermissionLevel, error) {

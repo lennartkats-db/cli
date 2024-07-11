@@ -42,7 +42,7 @@ func (m *configureWSFS) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagno
 		return filer.NewWorkspaceFilesExtensionsClient(b.WorkspaceClient(), path)
 	})
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.IOError, err)
 	}
 
 	b.BundleRoot = p

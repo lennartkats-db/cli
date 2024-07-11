@@ -60,7 +60,7 @@ func (n normalizeOptions) normalizeType(typ reflect.Type, src dyn.Value, seen []
 		return n.normalizeInterface(typ, src, path)
 	}
 
-	return dyn.InvalidValue, diag.Errorf("unsupported type: %s", typ.Kind())
+	return dyn.InvalidValue, diag.Errorf(diag.InternalError)("unsupported type: %s", typ.Kind())
 }
 
 func nullWarning(expected dyn.Kind, src dyn.Value, path dyn.Path) diag.Diagnostic {

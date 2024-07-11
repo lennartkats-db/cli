@@ -30,7 +30,7 @@ func loadTargetWithDiags(path, env string) (*bundle.Bundle, diag.Diagnostics) {
 	ctx := context.Background()
 	b, err := bundle.Load(ctx, path)
 	if err != nil {
-		return nil, diag.FromErr(err)
+		return nil, diag.FromErr(diag.InternalError, err)
 	}
 
 	diags := bundle.Apply(ctx, b, bundle.Seq(

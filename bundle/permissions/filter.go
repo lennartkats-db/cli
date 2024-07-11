@@ -84,5 +84,5 @@ func (m *filterCurrentUser) Apply(ctx context.Context, b *bundle.Bundle) diag.Di
 		return dyn.Set(v, "resources", nv)
 	})
 
-	return diag.FromErr(err)
+	return diag.FromErr(diag.InternalError, err)
 }

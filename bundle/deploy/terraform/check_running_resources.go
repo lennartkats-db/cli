@@ -37,13 +37,13 @@ func (l *checkRunningResources) Apply(ctx context.Context, b *bundle.Bundle) dia
 
 	state, err := ParseResourcesState(ctx, b)
 	if err != nil && state == nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.RunError, err)
 	}
 
 	w := b.WorkspaceClient()
 	err = checkAnyResourceRunning(ctx, w, state)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.RunError, err)
 	}
 	return nil
 }

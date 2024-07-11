@@ -32,12 +32,12 @@ func (m *script) Name() string {
 func (m *script) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	executor, err := exec.NewCommandExecutor(b.RootPath)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.IOError, err)
 	}
 
 	cmd, out, err := executeHook(ctx, executor, b, m.scriptHook)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(diag.ScriptError, err)
 	}
 	if cmd == nil {
 		log.Debugf(ctx, "No script defined for %s, skipping", m.scriptHook)
@@ -53,7 +53,7 @@ func (m *script) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 		line, err = reader.ReadString('\n')
 	}
 
-	return diag.FromErr(cmd.Wait())
+	return diag.FromErr(diag.ScriptError, cmd.Wait())
 }
 
 func executeHook(ctx context.Context, executor *exec.Executor, b *bundle.Bundle, hook config.ScriptHook) (exec.Command, io.Reader, error) {

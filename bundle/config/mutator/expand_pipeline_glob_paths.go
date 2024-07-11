@@ -106,7 +106,7 @@ func (m *expandPipelineGlobPaths) Apply(_ context.Context, b *bundle.Bundle) dia
 		return dyn.MapByPattern(v, p, m.expandSequence)
 	})
 
-	return diag.FromErr(err)
+	return diag.FromErr(diag.InternalError, err)
 }
 
 func (*expandPipelineGlobPaths) Name() string {

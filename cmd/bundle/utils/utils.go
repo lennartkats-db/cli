@@ -12,7 +12,7 @@ import (
 func configureVariables(cmd *cobra.Command, b *bundle.Bundle, variables []string) diag.Diagnostics {
 	return bundle.ApplyFunc(cmd.Context(), b, func(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 		err := b.Config.InitializeVariables(variables)
-		return diag.FromErr(err)
+		return diag.FromErr(diag.VariableError, err)
 	})
 }
 
@@ -25,7 +25,7 @@ func ConfigureBundleWithVariables(cmd *cobra.Command) (*bundle.Bundle, diag.Diag
 
 	variables, err := cmd.Flags().GetStringSlice("var")
 	if err != nil {
-		return b, diag.FromErr(err)
+		return b, diag.FromErr(diag.VariableError, err)
 	}
 
 	// Initialize variables by assigning them values passed as command line flags
