@@ -9,15 +9,15 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 )
 
-type applyFolderPermissions struct {
+type updateFolderPermissions struct {
 }
 
-func ApplyFolderPermissions() bundle.Mutator {
-	return &applyFolderPermissions{}
+func UpdateFolderPermissions() bundle.Mutator {
+	return &updateFolderPermissions{}
 }
 
 // Apply implements bundle.Mutator.
-func (*applyFolderPermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
+func (*updateFolderPermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	err := giveAccessForWorkspaceRoot(ctx, b)
 	if err != nil {
 		return diag.FromErr(err)
@@ -26,7 +26,7 @@ func (*applyFolderPermissions) Apply(ctx context.Context, b *bundle.Bundle) diag
 	return nil
 }
 
-func (*applyFolderPermissions) Name() string {
+func (*updateFolderPermissions) Name() string {
 	return "ApplyFolderPermissions"
 }
 

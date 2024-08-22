@@ -48,13 +48,13 @@ var levelsMap = map[string](map[string]string){
 	},
 }
 
-type applyResourcePermissions struct{}
+type updateResourcePermissions struct{}
 
-func ApplyResourcePermissions() bundle.Mutator {
-	return &applyResourcePermissions{}
+func UpdateResourcePermissions() bundle.Mutator {
+	return &updateResourcePermissions{}
 }
 
-func (m *applyResourcePermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
+func (m *updateResourcePermissions) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	err := validate(b)
 	if err != nil {
 		return diag.FromErr(err)
@@ -165,6 +165,6 @@ func includesOwner(permissions []resources.Permission) bool {
 	return false
 }
 
-func (m *applyResourcePermissions) Name() string {
+func (m *updateResourcePermissions) Name() string {
 	return "ApplyResourcePermissions"
 }

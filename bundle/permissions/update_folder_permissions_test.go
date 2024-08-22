@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestApplyWorkspaceRootPermissions(t *testing.T) {
+func TestUpdateFolderPermissions(t *testing.T) {
 	b := &bundle.Bundle{
 		Config: config.Root{
 			Workspace: config.Workspace{
@@ -69,6 +69,6 @@ func TestApplyWorkspaceRootPermissions(t *testing.T) {
 		WorkspaceObjectType: "directories",
 	}).Return(nil, nil)
 
-	diags := bundle.Apply(context.Background(), b, ApplyFolderPermissions())
+	diags := bundle.Apply(context.Background(), b, UpdateFolderPermissions())
 	require.NoError(t, diags.Error())
 }

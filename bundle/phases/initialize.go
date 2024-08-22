@@ -55,7 +55,7 @@ func Initialize() bundle.Mutator {
 				"workspace",
 				"variables",
 			),
-			permissions.ApplyResourcePermissions(),
+			permissions.UpdateResourcePermissions(),
 			mutator.SetRunAs(),
 			mutator.OverrideCompute(),
 			mutator.ProcessTargetMode(),

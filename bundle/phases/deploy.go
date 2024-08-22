@@ -120,7 +120,7 @@ func Deploy() bundle.Mutator {
 				files.Upload(),
 				deploy.StateUpdate(),
 				deploy.StatePush(),
-				permissions.ApplyFolderPermissions(),
+				permissions.UpdateFolderPermissions(),
 				terraform.Interpolate(),
 				terraform.Write(),
 				terraform.CheckRunningResource(),

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestApplyBundlePermissions(t *testing.T) {
+func TestUpdateResourcePermissions(t *testing.T) {
 	b := &bundle.Bundle{
 		Config: config.Root{
 			Workspace: config.Workspace{
@@ -55,7 +55,7 @@ func TestApplyBundlePermissions(t *testing.T) {
 		},
 	}
 
-	diags := bundle.Apply(context.Background(), b, ApplyResourcePermissions())
+	diags := bundle.Apply(context.Background(), b, UpdateResourcePermissions())
 	require.NoError(t, diags.Error())
 
 	require.Len(t, b.Config.Resources.Jobs["job_1"].Permissions, 3)
@@ -105,7 +105,7 @@ func TestApplyBundlePermissions(t *testing.T) {
 	require.Contains(t, b.Config.Resources.ModelServingEndpoints["endpoint_2"].Permissions, resources.Permission{Level: "CAN_QUERY", ServicePrincipalName: "TestServicePrincipal"})
 }
 
-func TestWarningOnOverlapPermission(t *testing.T) {
+func TestUpdateResourcePermissionsWarningOnOverlapPermission(t *testing.T) {
 	b := &bundle.Bundle{
 		Config: config.Root{
 			Workspace: config.Workspace{
@@ -138,7 +138,7 @@ func TestWarningOnOverlapPermission(t *testing.T) {
 		},
 	}
 
-	diags := bundle.Apply(context.Background(), b, ApplyResourcePermissions())
+	diags := bundle.Apply(context.Background(), b, UpdateResourcePermissions())
 	require.NoError(t, diags.Error())
 
 	require.Contains(t, b.Config.Resources.Jobs["job_1"].Permissions, resources.Permission{Level: "CAN_VIEW", UserName: "TestUser"})
@@ -149,7 +149,7 @@ func TestWarningOnOverlapPermission(t *testing.T) {
 
 }
 
-func TestOwnerLevel(t *testing.T) {
+func TestUpdateResourcePermissionsOwnerLevel(t *testing.T) {
 	// Create a bundle with a run_as configuration
 	b := &bundle.Bundle{
 		Config: config.Root{
@@ -195,7 +195,7 @@ func TestOwnerLevel(t *testing.T) {
 		},
 	}
 
-	diags := bundle.Apply(context.Background(), b, ApplyResourcePermissions())
+	diags := bundle.Apply(context.Background(), b, UpdateResourcePermissions())
 	require.NoError(t, diags.Error())
 	require.Contains(t, b.Config.Resources.Jobs["job_1"].Permissions, resources.Permission{Level: "CAN_MANAGE", UserName: "Bob"})
 	require.Contains(t, b.Config.Resources.Jobs["job_1"].Permissions, resources.Permission{Level: "IS_OWNER", UserName: "Alice"})
