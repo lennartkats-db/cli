@@ -34,6 +34,7 @@ type pair struct {
 var cachedUser *iam.User
 var cachedIsServicePrincipal *bool
 var cachedCatalog *string
+var cachedIsServerlessSupported *bool
 
 func loadHelpers(ctx context.Context) template.FuncMap {
 	w := root.WorkspaceClient(ctx)
@@ -119,7 +120,7 @@ func loadHelpers(ctx context.Context) template.FuncMap {
 					return "", err
 				}
 			}
-			return auth.GetShortUserName(cachedUser.UserName), nil
+			return auth.GetShortUserName(cachedUser), nil
 		},
 		// Get the default workspace catalog. If there is no default, or if
 		// Unity Catalog is not enabled, return an empty string.
@@ -155,5 +156,36 @@ func loadHelpers(ctx context.Context) template.FuncMap {
 			cachedIsServicePrincipal = &result
 			return result, nil
 		},
+		// "is_serverless_supported": func() (bool, error) {
+		// 	if cachedIsServerlessSupported != nil {
+		// 		return *cachedIsServerlessSupported, nil
+		// 	}
+
+		// 	workspaceId, err := w.CurrentWorkspaceID(ctx)
+		// 	if err != nil {
+		// 		return false, err
+		// 	}
+		// 	orgId := strconv.FormatInt(workspaceId, 10)
+		// 	api, err := client.New(w.Config)
+		// 	if err != nil {
+		// 		return false, err
+		// 	}
+		// 	var response any
+		// 	headers := map[string]string{"Content-Type": "application/json"}
+		// 	err = api.Do(ctx, "GET", "TODO/SOME/URL/TO/CHECK/SERVERLESS", headers, &response)
+		// /api/2.0/settings-api/workspace/2548836972759138/serverless_job_nb
+		// 	if err != nil {
+		// 		return 0, err
+		// 	}
+		// 	workspaceId, err := strconv.ParseInt(workspaceIdStr, 10, 64)
+		// 	if err != nil {
+		// 		return 0, err
+		// 	}
+		// 	return workspaceId, nil
+
+		// 	result := auth.IsServicePrincipal(cachedUser.UserName)
+		// 	cachedIsServicePrincipal = &result
+		// 	return result, nil
+		// },
 	}
 }
