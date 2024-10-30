@@ -1,0 +1,20 @@
+# This is a Databricks asset bundle definition for {{.project_name}}.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: {{.project_name}}
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: {{workspace_host}}
+
+  prod:
+    mode: production
+    workspace:
+      host: {{workspace_host}}
+      root_path: /Users/{{user_name}}/.bundle/${bundle.name}/{bundle.target}

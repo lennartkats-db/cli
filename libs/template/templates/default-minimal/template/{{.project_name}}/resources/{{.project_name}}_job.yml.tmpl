@@ -1,0 +1,26 @@
+# The main job for {{.project_name}}.
+resources:
+  jobs:
+    {{.project_name}}_job:
+      name: {{.project_name}}_job
+
+      schedule:
+        # Run every day at 8:23 AM
+        quartz_cron_expression: '44 23 8 * * ?'
+        timezone_id: Europe/Amsterdam
+
+      {{- if not is_service_principal}}
+
+      email_notifications:
+        on_failure:
+          - {{user_name}}
+
+      {{else}}
+
+      {{end -}}
+
+      tasks:
+        - task_key: notebook_task
+          job_cluster_key: job_cluster
+          notebook_task:
+            notebook_path: ../src/notebook.ipynb
