@@ -7,13 +7,11 @@ import (
 var highlightCounter int
 
 func animateText(text string) string {
-	// This is a simple implementation of a highlight effect.
-	// It cycles through a few shades of gray.
 	colors := []pterm.Color{
-		pterm.FgGray,
-		pterm.FgLightWhite,
-		pterm.FgWhite,
-		pterm.FgLightWhite,
+		pterm.FgBlue,
+		pterm.FgCyan,
+		pterm.FgLightBlue,
+		pterm.FgCyan,
 	}
 	var highlightedText string
 	for i, char := range text {

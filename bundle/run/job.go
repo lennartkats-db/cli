@@ -21,7 +21,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-
 // Default timeout for waiting for a job run to complete.
 var jobRunTimeout time.Duration = 24 * time.Hour
 

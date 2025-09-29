@@ -17,7 +17,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 func filterEventsByUpdateId(events []pipelines.PipelineEvent, updateId string) []pipelines.PipelineEvent {
 	var result []pipelines.PipelineEvent
 	for i := range events {
