@@ -13,8 +13,10 @@ import (
 	"github.com/databricks/cli/libs/cmdio"
 	"github.com/databricks/cli/libs/log"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
+
 
 func filterEventsByUpdateId(events []pipelines.PipelineEvent, updateId string) []pipelines.PipelineEvent {
 	var result []pipelines.PipelineEvent
@@ -104,21 +106,20 @@ func (r *pipelineRunner) Run(ctx context.Context, opts *Options) (output.RunOutp
 
 	updateID := res.UpdateId
 
-	// setup progress logger and tracker to query events
+	// setup tracker to query events
 	updateTracker := progress.NewUpdateTracker(pipelineID, updateID, w)
-	progressLogger, ok := cmdio.FromContext(ctx)
-	if !ok {
-		return nil, errors.New("no progress logger found")
-	}
 
 	// Log the pipeline update URL as soon as it is available.
-	progressLogger.Log(progress.NewPipelineUpdateUrlEvent(w.Config.Host, updateID, pipelineID))
+	log.Infof(ctx, "Pipeline update URL: %s/#joblist/pipelines/%s/updates/%s", w.Config.Host, pipelineID, updateID)
 
 	if opts.NoWait {
 		return &output.PipelineOutput{
 			UpdateId: updateID,
 		}, nil
 	}
+
+	spinner, _ := pterm.DefaultSpinner.Start("Starting pipeline update...")
+	defer spinner.Stop()
 
 	// Poll update for completion and post status.
 	// Note: there is no "StartUpdateAndWait" wrapper for this API.
@@ -129,7 +130,6 @@ func (r *pipelineRunner) Run(ctx context.Context, opts *Options) (output.RunOutp
 			return nil, err
 		}
 		for _, event := range events {
-			progressLogger.Log(&event)
 			log.Info(ctx, event.String())
 		}
 
@@ -141,16 +141,18 @@ func (r *pipelineRunner) Run(ctx context.Context, opts *Options) (output.RunOutp
 		// Log only if the current state is different from the previous state.
 		state := update.Update.State
 		if prevState == nil || *prevState != state {
-			log.Infof(ctx, "Update status: %s", state)
+			text := "Update status: " + string(state)
+			spinner.UpdateText(animateText(text))
+			log.Info(ctx, text)
 			prevState = &state
 		}
 
 		if state == pipelines.UpdateInfoStateCanceled {
-			log.Infof(ctx, "Update was cancelled!")
+			spinner.Fail("Update was cancelled!")
 			return nil, errors.New("update cancelled")
 		}
 		if state == pipelines.UpdateInfoStateFailed {
-			log.Infof(ctx, "Update has failed!")
+			spinner.Fail("Update has failed!")
 			err := r.logErrorEvent(ctx, pipelineID, updateID)
 			if err != nil {
 				return nil, err
@@ -158,7 +160,7 @@ func (r *pipelineRunner) Run(ctx context.Context, opts *Options) (output.RunOutp
 			return nil, errors.New("update failed")
 		}
 		if state == pipelines.UpdateInfoStateCompleted {
-			log.Infof(ctx, "Update has completed successfully!")
+			spinner.Success("Update has completed successfully!")
 			return &output.PipelineOutput{
 				UpdateId: updateID,
 			}, nil

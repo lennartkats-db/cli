@@ -11,9 +11,12 @@ import (
 	"github.com/databricks/cli/bundle/phases"
 	"github.com/databricks/cli/cmd/bundle/utils"
 	"github.com/databricks/cli/cmd/root"
+	"os"
+
 	"github.com/databricks/cli/libs/logdiag"
 	"github.com/databricks/cli/libs/sync"
 	"github.com/databricks/cli/libs/telemetry/protos"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -76,9 +79,13 @@ See https://docs.databricks.com/en/dev-tools/bundles/index.html for more informa
 		})
 
 		var outputHandler sync.OutputHandler
-		if verbose {
+		if verbose || !isatty.IsTerminal(os.Stdout.Fd()) {
 			outputHandler = func(ctx context.Context, c <-chan sync.Event) {
 				sync.TextOutput(ctx, c, cmd.OutOrStdout())
+			}
+		} else {
+			outputHandler = func(ctx context.Context, c <-chan sync.Event) {
+				ptermOutputHandler(ctx, c, cmd.OutOrStdout())
 			}
 		}
 

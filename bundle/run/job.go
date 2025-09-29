@@ -16,9 +16,11 @@ import (
 	"github.com/databricks/cli/libs/log"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/fatih/color"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
+
 
 // Default timeout for waiting for a job run to complete.
 var jobRunTimeout time.Duration = 24 * time.Hour
@@ -113,40 +115,6 @@ func logDebugCallback(ctx context.Context, runId *int64) func(info *jobs.Run) {
 	}
 }
 
-func logProgressCallback(ctx context.Context, progressLogger *cmdio.Logger) func(info *jobs.Run) {
-	var prevState *jobs.RunState
-	return func(i *jobs.Run) {
-		state := i.State
-		if state == nil {
-			return
-		}
-
-		if prevState == nil {
-			progressLogger.Log(progress.NewJobRunUrlEvent(i.RunPageUrl))
-		}
-
-		if prevState != nil && prevState.LifeCycleState == state.LifeCycleState &&
-			prevState.ResultState == state.ResultState {
-			return
-		} else {
-			prevState = state
-		}
-
-		event := &progress.JobProgressEvent{
-			Timestamp: time.Now(),
-			JobId:     i.JobId,
-			RunId:     i.RunId,
-			RunName:   i.RunName,
-			State:     *i.State,
-		}
-
-		// log progress events to stderr
-		progressLogger.Log(event)
-
-		// log progress events in using the default logger
-		log.Info(ctx, event.String())
-	}
-}
 
 func (r *jobRunner) Run(ctx context.Context, opts *Options) (output.RunOutput, error) {
 	jobID, err := strconv.ParseInt(r.job.ID, 10, 64)
@@ -179,33 +147,37 @@ func (r *jobRunner) Run(ctx context.Context, opts *Options) (output.RunOutput, e
 	// Called on every poll request
 	logDebug := logDebugCallback(ctx, runId)
 
-	// callback to log progress events. Called on every poll request
-	progressLogger, ok := cmdio.FromContext(ctx)
-	if !ok {
-		return nil, errors.New("no progress logger found")
-	}
-	logProgress := logProgressCallback(ctx, progressLogger)
+	spinner, _ := pterm.DefaultSpinner.Start("Starting job run...")
+	defer spinner.Stop()
 
 	waiter, err := w.Jobs.RunNow(ctx, *req)
 	if err != nil {
+		spinner.Fail("Failed to start job run")
 		return nil, fmt.Errorf("cannot start job: %w", err)
 	}
 
 	if opts.NoWait {
+		spinner.Success("Job run started")
 		details, err := w.Jobs.GetRun(ctx, jobs.GetRunRequest{
 			RunId: waiter.RunId,
 		})
-		progressLogger.Log(progress.NewJobRunUrlEvent(details.RunPageUrl))
+		log.Infof(ctx, "Run URL: %s", details.RunPageUrl)
 		return nil, err
 	}
 
 	run, err := waiter.OnProgress(func(r *jobs.Run) {
 		pullRunId(r)
 		logDebug(r)
-		logProgress(r)
+		text := "Job run status: " + r.State.LifeCycleState.String()
+		spinner.UpdateText(animateText(text))
+		log.Info(ctx, text)
 	}).GetWithTimeout(jobRunTimeout)
+
 	if err != nil {
+		spinner.Fail("Job run failed")
 		r.logFailedTasks(ctx, *runId)
+	} else {
+		spinner.Success("Job run finished with state: " + string(run.State.ResultState))
 	}
 	if err != nil {
 		return nil, err
