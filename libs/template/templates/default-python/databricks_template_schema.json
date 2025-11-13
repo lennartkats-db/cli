@@ -1,5 +1,5 @@
 {
-    "welcome_message": "\nWelcome to the default Python template for Databricks Asset Bundles!",
+    "welcome_message": "\nWelcome to the default Python template for Databricks Asset Bundles! \n// For Python, the template includes a pyproject.toml and tests directory.",
     "properties": {
         "project_name": {
             "type": "string",
@@ -36,7 +36,21 @@
             "enum": ["yes", "no"],
             "description": "Use serverless compute",
             "order": 5
+        },
+        "project_language": {
+            "type": "string",
+            "default": "python",
+            "enum": [
+                "python",
+                "sql",
+                "other"
+            ],
+            "description": "What language will be used with this project: python, sql, or other?",
+            "order": 6
         }
+    },
+    "derived_properties": {
+        "language": "{{if eq .project_language \"python\"}}python{{else}}sql{{end}}"
     },
     "success_message": "Workspace to use (auto-detected, edit in '{{.project_name}}/databricks.yml'): {{workspace_host}}\n\n✨ Your new project has been created in the '{{.project_name}}' directory!\n\nPlease refer to the README.md file for \"getting started\" instructions.\nSee also the documentation at https://docs.databricks.com/dev-tools/bundles/index.html."
 }
