@@ -1,5 +1,5 @@
 {
-    "welcome_message": "\nWelcome to the default Python template for Databricks Asset Bundles!",
+    "welcome_message": "\nWelcome to the default Python template for Databricks Asset Bundles! \n// For Python, the template includes a pyproject.toml and tests directory.",
     "properties": {
         "project_name": {
             "type": "string",
@@ -9,33 +9,70 @@
             "pattern": "^[A-Za-z0-9_]+$",
             "pattern_match_failure_message": "Name must consist of letters, numbers, and underscores."
         },
+        "project_language": {
+            "type": "string",
+            "default": "python",
+            "enum": [
+                "python",
+                "sql",
+                "other"
+            ],
+            "description": "What language will be used with this project: python, sql, or other?",
+            "order": 2
+        },
+        "language": {
+            "type": "string",
+            "default": "python",
+            "description": "The language used in the project.",
+            "skip_prompt_if": {
+                "properties": {
+                    "project_language": {
+                        "const": "python"
+                    }
+                }
+            },
+            "order": 3
+        },
+        "language_sql": {
+            "type": "string",
+            "default": "sql",
+            "description": "The language used in the project.",
+            "skip_prompt_if": {
+                "properties": {
+                    "project_language": {
+                        "const": "sql"
+                    }
+                }
+            },
+            "order": 4
+        },
         "include_notebook": {
             "type": "string",
             "default": "yes",
             "enum": ["yes", "no"],
             "description": "Include a stub (sample) notebook in '{{.project_name}}{{path_separator}}src'",
-            "order": 2
+            "order": 5
         },
         "include_dlt": {
             "type": "string",
             "default": "yes",
             "enum": ["yes", "no"],
             "description": "Include a stub (sample) Lakeflow Declarative Pipeline in '{{.project_name}}{{path_separator}}src'",
-            "order": 3
+            "order": 6
         },
         "include_python": {
             "type": "string",
             "default": "yes",
             "enum": ["yes", "no"],
             "description": "Include a stub (sample) Python package in '{{.project_name}}{{path_separator}}src'",
-            "order": 4
+            "order": 7
         },
         "serverless": {
             "type": "string",
             "default": "yes",
             "enum": ["yes", "no"],
             "description": "Use serverless compute",
-            "order": 5
+            "order": 8
         }
     },
     "success_message": "Workspace to use (auto-detected, edit in '{{.project_name}}/databricks.yml'): {{workspace_host}}\n\n✨ Your new project has been created in the '{{.project_name}}' directory!\n\nPlease refer to the README.md file for \"getting started\" instructions.\nSee also the documentation at https://docs.databricks.com/dev-tools/bundles/index.html."
