@@ -12,6 +12,13 @@ func FormatBrandedHeader(emoji, message string) string {
 		headerLine, emoji, message, headerLine)
 }
 
+// FormatProjectScaffoldSuccess formats a success message for project scaffolding.
+func FormatProjectScaffoldSuccess(templateName, workDir string, filesCopied int) string {
+	header := FormatBrandedHeader("📦", "Project scaffolded successfully")
+	return fmt.Sprintf("%s✅ Created %s project at %s\n\nFiles copied: %d\n",
+		header, templateName, workDir, filesCopied)
+}
+
 // FormatValidationSuccess formats a success message for validation.
 func FormatValidationSuccess(message string) string {
 	header := FormatBrandedHeader("🔍", "Validating your app")
@@ -37,11 +44,4 @@ func FormatDeploymentFailure(appName, message string) string {
 	header := FormatBrandedHeader("🚢", "Deploying to production")
 	return fmt.Sprintf("%s❌ Deployment failed for '%s'\n\n%s\n",
 		header, appName, message)
-}
-
-// FormatProjectScaffoldSuccess formats a success message for project scaffolding.
-func FormatProjectScaffoldSuccess(templateName, workDir string, filesCopied int) string {
-	header := FormatBrandedHeader("📦", "Project scaffolded successfully")
-	return fmt.Sprintf("%s✅ Created %s project at %s\n\nFiles copied: %d\n",
-		header, templateName, workDir, filesCopied)
 }
